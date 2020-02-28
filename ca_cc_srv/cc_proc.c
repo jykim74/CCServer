@@ -4,46 +4,66 @@
 
 #include "js_bin.h"
 #include "js_http.h"
+#include "js_cc.h"
+#include "js_cc_data.h"
 
-int runGet( const char *pPath, const char **ppRsp )
+#include "cc_srv.h"
+
+int runGet( sqlite3 *db, const char *pPath, const char **ppRsp )
 {
     return 0;
 }
 
-int runPost( const char *pPath, const char *pReq, const char **ppRsp )
+int runPost( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
+{
+    int ret = 0;
+    if( strcasecmp( pPath, JS_CC_PATH_AUTH ) == 0)
+    {
+        JCC_AuthReq sAuthReq;
+        JCC_AuthRsp sAuthRsp;
+
+        memset( &sAuthReq, 0x00, sizeof(sAuthReq));
+        memset( &sAuthRsp, 0x00, sizeof(sAuthRsp));
+
+        JS_CC_decodeAuthReq( pReq, &sAuthReq );
+
+        ret = authWork( db, &sAuthReq, &sAuthRsp );
+
+        JS_CC_encodeAuthRsp( &sAuthRsp, ppRsp );
+    }
+
+    return 0;
+}
+
+int runPut( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
 {
     return 0;
 }
 
-int runPut( const char *pPath, const char *pReq, const char **ppRsp )
+int runDelete( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
 {
     return 0;
 }
 
-int runDelete( const char *pPath, const char *pReq, const char **ppRsp )
-{
-    return 0;
-}
-
-int procCC( const char *pReq, int nType, const char *pPath, char **ppRsp )
+int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, char **ppRsp )
 {
     int ret = 0;
 
     if( nType == JS_HTTP_METHOD_GET )
     {
-        ret = runGet( pPath, ppRsp );
+        ret = runGet( db, pPath, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_POST )
     {
-        ret = runPost( pPath, pReq, ppRsp );
+        ret = runPost( db, pPath, pReq, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_PUT )
     {
-        ret = runPut( pPath, pReq, ppRsp );
+        ret = runPut( db, pPath, pReq, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_DELETE )
     {
-        ret = runDelete( pPath, pReq, ppRsp );
+        ret = runDelete( db, pPath, pReq, ppRsp );
     }
 
     return 0;

@@ -7,6 +7,7 @@
 #include "js_process.h"
 #include "js_db.h"
 #include "js_ssl.h"
+#include "js_log.h"
 
 #include "cc_srv.h"
 
@@ -14,6 +15,8 @@
 SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
+
+const char* g_dbPath = "/Users/jykim/work/CAMan/ca.db";
 
 int CC_Service( JThreadInfo *pThInfo )
 {
@@ -28,12 +31,22 @@ int CC_Service( JThreadInfo *pThInfo )
     JNameValList   *pHeaderList = NULL;
     JNameValList   *pRspHeaderList = NULL;
 
+    sqlite3* db = JS_DB_open( g_dbPath );
+    if( db == NULL )
+    {
+        fprintf( stderr, "fail to open db file(%s)\n", g_dbPath );
+        ret = -1;
+        goto end;
+    }
+
     ret = JS_HTTP_recv( pThInfo->nSockFd, &pMethInfo, &pHeaderList, &pReq );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to receive message(%d)\n", ret );
         goto end;
     }
+
+    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Req: %s", pReq );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath );
 
@@ -43,7 +56,7 @@ int CC_Service( JThreadInfo *pThInfo )
     }
     else
     {
-        ret = procCC( pReq, nType, pPath, &pRsp );
+        ret = procCC( db, pReq, nType, pPath, &pRsp );
         if( ret != 0 )
         {
             goto end;
@@ -53,6 +66,7 @@ int CC_Service( JThreadInfo *pThInfo )
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
 
+    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Rsp: %s", pRsp );
     ret = JS_HTTPS_send( pThInfo->nSockFd, JS_HTTP_OK, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
@@ -68,6 +82,7 @@ end:
 
     if( pHeaderList ) JS_UTIL_resetNameValList( &pHeaderList );
     if( pRspHeaderList ) JS_UTIL_resetNameValList( &pRspHeaderList );
+    JS_DB_close( db );
 
     return 0;
 }
@@ -87,6 +102,14 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     JNameValList   *pHeaderList = NULL;
     JNameValList   *pRspHeaderList = NULL;
 
+    sqlite3* db = JS_DB_open( g_dbPath );
+    if( db == NULL )
+    {
+        fprintf( stderr, "fail to open db file(%s)\n", g_dbPath );
+        ret = -1;
+        goto end;
+    }
+
     ret = JS_SSL_accept( g_pSSLCTX, pThInfo->nSockFd, &pSSL );
 
     ret = JS_HTTPS_recv( pSSL, &pMethInfo, &pHeaderList, &pReq );
@@ -96,6 +119,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         goto end;
     }
 
+
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath );
 
     if( strcasecmp( pPath, "PING" ) == 0 )
@@ -104,7 +128,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     }
     else
     {
-        ret = procCC( pReq, nType, pPath, &pRsp );
+        ret = procCC( db, pReq, nType, pPath, &pRsp );
         if( ret != 0 )
         {
             goto end;
@@ -114,7 +138,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
 
-    ret = JS_HTTPS_sendBin( pSSL, JS_HTTP_OK, pRspHeaderList, pRsp );
+    ret = JS_HTTPS_send( pSSL, JS_HTTP_OK, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
@@ -130,7 +154,7 @@ end:
     if( pHeaderList ) JS_UTIL_resetNameValList( &pHeaderList );
     if( pRspHeaderList ) JS_UTIL_resetNameValList( &pRspHeaderList );
     if( pSSL ) JS_SSL_clear( pSSL );
-
+    JS_DB_close(db);
 
     return 0;
 }

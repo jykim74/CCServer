@@ -6,6 +6,7 @@ CONFIG -= qt
 SOURCES += \
         cc_proc.c \
         cc_srv.c \
+        cc_work.c \
         main.c
 
 HEADERS += \
