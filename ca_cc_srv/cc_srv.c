@@ -67,7 +67,7 @@ int CC_Service( JThreadInfo *pThInfo )
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
 
     JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Rsp: %s", pRsp );
-    ret = JS_HTTPS_send( pThInfo->nSockFd, JS_HTTP_OK, pRspHeaderList, pRsp );
+    ret = JS_HTTP_send( pThInfo->nSockFd, JS_HTTP_OK, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
@@ -161,6 +161,14 @@ end:
 
 int Init()
 {
+//    const char *pCACertPath = "/Users/jykim/work/certs/root_cert.der";
+    const char *pCertPath = "/Users/jykim/work/certs/server_cert.der";
+    const char *pPriPath = "/Users/jykim/work/certs/server_prikey.der";
+
+//    JS_BIN_fileRead( pCACertPath, &g_binCACert );
+    JS_BIN_fileRead( pCertPath, &g_binCert );
+    JS_BIN_fileRead( pPriPath, &g_binPri );
+
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
 
