@@ -74,6 +74,8 @@ int authWork( sqlite3 *db, const JCC_AuthReq *pReq, JCC_AuthRsp *pRsp )
         goto end;
     }
 
+    JS_DB_setAuth( &sAuth, sToken, pReq->pUserName, tNow, 18400 );
+
 end :
     JS_DB_resetAdmin( &sAdmin );
     JS_DB_resetAuth( &sAuth );
