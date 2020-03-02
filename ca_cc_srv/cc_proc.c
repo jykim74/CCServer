@@ -30,6 +30,25 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRs
         ret = authWork( db, &sAuthReq, &sAuthRsp );
 
         JS_CC_encodeAuthRsp( &sAuthRsp, ppRsp );
+
+        JS_CC_resetAuthReq( &sAuthReq );
+        JS_CC_resetAuthRsp( &sAuthRsp );
+    }
+    else if( strcasecmp( pPath, JS_CC_PATH_USER ) == 0 )
+    {
+        JCC_RegUserReq sRegUserReq;
+        JCC_RegUserRsp sRegUserRsp;
+
+        memset( &sRegUserReq, 0x00, sizeof(sRegUserReq));
+        memset( &sRegUserRsp, 0x00, sizeof(sRegUserRsp));
+
+        JS_CC_decodeRegUserReq( pReq, &sRegUserReq );
+        ret = regUser( db, &sRegUserReq, &sRegUserRsp );
+
+        JS_CC_encodeRegUserRsp( &sRegUserRsp, ppRsp );
+
+        JS_CC_resetRegUserReq( &sRegUserReq );
+        JS_CC_resetRegUserRsp( &sRegUserRsp );
     }
 
     return 0;

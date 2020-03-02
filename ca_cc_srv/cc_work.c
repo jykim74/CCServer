@@ -95,3 +95,56 @@ end :
 
     return ret;
 }
+
+int regUser( sqlite3 *db, const JCC_RegUserReq *pReq, JCC_RegUserRsp *pRsp )
+{
+    int ret = 0;
+    BIN binRand = {0,0};
+    int nRefNum = 0;
+    char sRefNum[64];
+    char *pRand = NULL;
+
+    JDB_User    sDBUser;
+
+    memset( &sDBUser, 0x00, sizeof(sDBUser ));
+
+    nRefNum = JS_DB_getSeq( db, "TB_USER" );
+    if( nRefNum < 0 )
+    {
+        ret = JS_CC_ERROR_BASE;
+        goto end;
+    }
+
+    sprintf( sRefNum, "%d", nRefNum );
+    ret = JS_PKI_genRandom( 4, &binRand );
+    ret = JS_BIN_encodeHex( &binRand, &pRand );
+
+    ret = JS_DB_setUser( &sDBUser,
+                         -1,
+                         pReq->pName,
+                         pReq->pSSN,
+                         pReq->pEmail,
+                         0,
+                         sRefNum,
+                         pRand );
+
+    ret = JS_DB_addUser( db, &sDBUser );
+
+end :
+    if( ret == JS_CC_OK )
+    {
+        JS_CC_setRegUserRsp( pRsp, "0000", "OK", sRefNum, pRand );
+    }
+    else
+    {
+        char    sResCode[16];
+        sprintf( sResCode, "%04d", ret );
+        JS_CC_setRegUserRsp( pRsp, sResCode, "Error", NULL, NULL );
+    }
+
+    JS_DB_resetUser( &sDBUser );
+    if( pRand ) JS_free( pRand );
+    JS_BIN_reset( &binRand );
+
+    return ret;
+}

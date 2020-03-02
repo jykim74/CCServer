@@ -9,5 +9,6 @@
 int genToken( const char *pPassword, time_t tTime, char *pToken );
 int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, char **ppRsp );
 int authWork( sqlite3 *db, const JCC_AuthReq *pReq, JCC_AuthRsp *pRsp );
+int regUser( sqlite3 *db, const JCC_RegUserReq *pReq, JCC_RegUserRsp *pRsp );
 
 #endif // CC_SRV_H
