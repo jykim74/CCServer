@@ -75,6 +75,8 @@ int authWork( sqlite3 *db, const JCC_AuthReq *pReq, JCC_AuthRsp *pRsp )
     }
 
     JS_DB_setAuth( &sAuth, sToken, pReq->pUserName, tNow, 18400 );
+    JS_DB_delAuthByName( db, pReq->pUserName );
+    JS_DB_addAuth( db, &sAuth );
 
 end :
     JS_DB_resetAdmin( &sAdmin );

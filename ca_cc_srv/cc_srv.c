@@ -8,6 +8,7 @@
 #include "js_db.h"
 #include "js_ssl.h"
 #include "js_log.h"
+#include "js_cc.h"
 
 #include "cc_srv.h"
 
@@ -17,6 +18,29 @@ BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
 
 const char* g_dbPath = "/Users/jykim/work/CAMan/ca.db";
+
+int isLogin( sqlite3* db, JNameValList *pHeaderList )
+{
+    JDB_Auth sAuth;
+    const char *pToken = NULL;
+    if( pHeaderList == NULL ) return 0;
+
+    memset( &sAuth, 0x00, sizeof(sAuth));
+
+    pToken = JS_UTIL_valueFromNameValList( pHeaderList, "Token" );
+    if( pToken == NULL ) return 0;
+
+    JS_DB_getAuth( db, pToken, &sAuth );
+
+    if( sAuth.pToken && strcasecmp( pToken, sAuth.pToken ) == 0 )
+    {
+        JS_DB_resetAuth( &sAuth );
+        return 1;
+    }
+
+    JS_DB_resetAuth( &sAuth );
+    return 0;
+}
 
 int CC_Service( JThreadInfo *pThInfo )
 {
@@ -56,6 +80,16 @@ int CC_Service( JThreadInfo *pThInfo )
     }
     else
     {
+        if( strcasecmp( pPath, JS_CC_PATH_AUTH ) != 0 )
+        {
+            if( isLogin( db, pHeaderList ) == 0 )
+            {
+                fprintf( stderr, "not logined\n" );
+                JS_LOG_write( JS_LOG_LEVEL_ERROR, "not logined" );
+                goto end;
+            }
+        }
+
         ret = procCC( db, pReq, nType, pPath, &pRsp );
         if( ret != 0 )
         {
@@ -128,6 +162,16 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     }
     else
     {
+        if( strcasecmp( pPath, JS_CC_PATH_AUTH ) != 0 )
+        {
+            if( isLogin( db, pHeaderList ) == 0 )
+            {
+                fprintf( stderr, "not logined\n" );
+                JS_LOG_write( JS_LOG_LEVEL_ERROR, "not logined" );
+                goto end;
+            }
+        }
+
         ret = procCC( db, pReq, nType, pPath, &pRsp );
         if( ret != 0 )
         {
