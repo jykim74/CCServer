@@ -52,8 +52,9 @@ int CC_Service( JThreadInfo *pThInfo )
     char    *pRsp = NULL;
 
     char    *pMethInfo = NULL;
-    JNameValList   *pHeaderList = NULL;
-    JNameValList   *pRspHeaderList = NULL;
+    JNameValList    *pHeaderList = NULL;
+    JNameValList    *pRspHeaderList = NULL;
+    JNameValList    *pParamList = NULL;
 
     sqlite3* db = JS_DB_open( g_dbPath );
     if( db == NULL )
@@ -72,7 +73,7 @@ int CC_Service( JThreadInfo *pThInfo )
 
     JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Req: %s", pReq );
 
-    JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath );
+    JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
     if( strcasecmp( pPath, "PING" ) == 0 )
     {
@@ -116,6 +117,8 @@ end:
 
     if( pHeaderList ) JS_UTIL_resetNameValList( &pHeaderList );
     if( pRspHeaderList ) JS_UTIL_resetNameValList( &pRspHeaderList );
+    if( pParamList ) JS_UTIL_resetNameValList( &pParamList );
+
     JS_DB_close( db );
 
     return 0;
@@ -133,8 +136,9 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     char    *pRsp = NULL;
 
     char    *pMethInfo = NULL;
-    JNameValList   *pHeaderList = NULL;
-    JNameValList   *pRspHeaderList = NULL;
+    JNameValList    *pHeaderList = NULL;
+    JNameValList    *pRspHeaderList = NULL;
+    JNameValList    *pParamList = NULL;
 
     sqlite3* db = JS_DB_open( g_dbPath );
     if( db == NULL )
@@ -154,7 +158,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     }
 
 
-    JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath );
+    JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
     if( strcasecmp( pPath, "PING" ) == 0 )
     {
@@ -197,6 +201,8 @@ end:
 
     if( pHeaderList ) JS_UTIL_resetNameValList( &pHeaderList );
     if( pRspHeaderList ) JS_UTIL_resetNameValList( &pRspHeaderList );
+    if( pParamList ) JS_UTIL_resetNameValList( &pParamList );
+
     if( pSSL ) JS_SSL_clear( pSSL );
     JS_DB_close(db);
 
