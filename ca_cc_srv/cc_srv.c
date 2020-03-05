@@ -91,23 +91,27 @@ int CC_Service( JThreadInfo *pThInfo )
             }
         }
 
-        ret = procCC( db, pReq, nType, pPath, &pRsp );
+        ret = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
         if( ret != 0 )
         {
             goto end;
         }
     }
 
+
+
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
 
-    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Rsp: %s", pRsp );
+//    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Rsp: %s", pRsp );
     ret = JS_HTTP_send( pThInfo->nSockFd, JS_HTTP_OK, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
         goto end;
     }
+
+    if( pRsp ) fprintf( stdout, "Rsp: %s\n", pRsp );
     /* send response body */
 end:
     if( pReq ) JS_free( pReq );
@@ -176,7 +180,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
             }
         }
 
-        ret = procCC( db, pReq, nType, pPath, &pRsp );
+        ret = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
         if( ret != 0 )
         {
             goto end;
@@ -192,6 +196,8 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         fprintf( stderr, "fail to send message(%d)\n", ret );
         goto end;
     }
+
+    if( pRsp ) fprintf( stdout, "Rsp: %s\n", pRsp );
     /* send response body */
 end:
     if( pReq ) JS_free( pReq );

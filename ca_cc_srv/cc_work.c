@@ -4,6 +4,7 @@
 #include "js_bin.h"
 #include "js_db.h"
 #include "js_pki.h"
+#include "js_util.h"
 
 int genToken( const char *pPassword, time_t tTime, char *pToken )
 {
@@ -147,6 +148,25 @@ end :
     JS_DB_resetUser( &sDBUser );
     if( pRand ) JS_free( pRand );
     JS_BIN_reset( &binRand );
+
+    return ret;
+}
+
+int getUser( sqlite3 *db, const JStrList *pInfo, JCC_UserList **ppUserList )
+{
+    int ret = 0;
+    JDB_UserList    *pUserList = NULL;
+
+    if( pInfo == NULL )
+    {
+        ret = JS_DB_getUserList( db, &pUserList );
+    }
+    else
+    {
+
+    }
+
+    *ppUserList = pUserList;
 
     return ret;
 }

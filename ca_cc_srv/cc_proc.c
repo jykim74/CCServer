@@ -9,15 +9,29 @@
 
 #include "cc_srv.h"
 
-int runGet( sqlite3 *db, const char *pPath, const char **ppRsp )
+int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, const char **ppRsp )
 {
+    JStrList    *pInfoList = NULL;
+
+    if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
+    {
+        JDB_UserList    *pDBUserList = NULL;
+
+        JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_USER, &pInfoList );
+        getUser( db, pInfoList, &pDBUserList );
+
+        JS_CC_encodeUserList( pDBUserList, ppRsp );
+        if( pDBUserList ) JS_DB_resetUserList( &pDBUserList );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     return 0;
 }
 
 int runPost( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
 {
     int ret = 0;
-    if( strcasecmp( pPath, JS_CC_PATH_AUTH ) == 0)
+    if( strncasecmp( pPath, JS_CC_PATH_AUTH, strlen( JS_CC_PATH_AUTH) ) == 0)
     {
         JCC_AuthReq sAuthReq;
         JCC_AuthRsp sAuthRsp;
@@ -34,7 +48,7 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRs
         JS_CC_resetAuthReq( &sAuthReq );
         JS_CC_resetAuthRsp( &sAuthRsp );
     }
-    else if( strcasecmp( pPath, JS_CC_PATH_USER ) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER) ) == 0 )
     {
         JCC_RegUserReq sRegUserReq;
         JCC_RegUserRsp sRegUserRsp;
@@ -64,13 +78,13 @@ int runDelete( sqlite3 *db, const char *pPath, const char *pReq, const char **pp
     return 0;
 }
 
-int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, char **ppRsp )
+int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
 
     if( nType == JS_HTTP_METHOD_GET )
     {
-        ret = runGet( db, pPath, ppRsp );
+        ret = runGet( db, pPath, pParamList, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_POST )
     {
