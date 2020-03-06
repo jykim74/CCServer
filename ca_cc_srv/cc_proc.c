@@ -9,72 +9,44 @@
 
 #include "cc_srv.h"
 
-int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, const char **ppRsp )
+int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
-    JStrList    *pInfoList = NULL;
-
     if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
     {
-        JDB_UserList    *pDBUserList = NULL;
-
-        JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_USER, &pInfoList );
-        getUser( db, pInfoList, &pDBUserList );
-
-        JS_CC_encodeUserList( pDBUserList, ppRsp );
-        if( pDBUserList ) JS_DB_resetUserList( &pDBUserList );
+        getUsers( db, pPath, pParamList, ppRsp );
     }
 
-    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     return 0;
 }
 
-int runPost( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
+int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int ret = 0;
     if( strncasecmp( pPath, JS_CC_PATH_AUTH, strlen( JS_CC_PATH_AUTH) ) == 0)
     {
-        JCC_AuthReq sAuthReq;
-        JCC_AuthRsp sAuthRsp;
-
-        memset( &sAuthReq, 0x00, sizeof(sAuthReq));
-        memset( &sAuthRsp, 0x00, sizeof(sAuthRsp));
-
-        JS_CC_decodeAuthReq( pReq, &sAuthReq );
-
-        ret = authWork( db, &sAuthReq, &sAuthRsp );
-
-        JS_CC_encodeAuthRsp( &sAuthRsp, ppRsp );
-
-        JS_CC_resetAuthReq( &sAuthReq );
-        JS_CC_resetAuthRsp( &sAuthRsp );
+        ret = authWork( db, pReq, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER) ) == 0 )
     {
-        JCC_RegUserReq sRegUserReq;
-        JCC_RegUserRsp sRegUserRsp;
-
-        memset( &sRegUserReq, 0x00, sizeof(sRegUserReq));
-        memset( &sRegUserRsp, 0x00, sizeof(sRegUserRsp));
-
-        JS_CC_decodeRegUserReq( pReq, &sRegUserReq );
-        ret = regUser( db, &sRegUserReq, &sRegUserRsp );
-
-        JS_CC_encodeRegUserRsp( &sRegUserRsp, ppRsp );
-
-        JS_CC_resetRegUserReq( &sRegUserReq );
-        JS_CC_resetRegUserRsp( &sRegUserRsp );
+        ret = regUser( db, pReq, ppRsp );
     }
 
     return 0;
 }
 
-int runPut( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
+int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     return 0;
 }
 
-int runDelete( sqlite3 *db, const char *pPath, const char *pReq, const char **ppRsp )
+int runDelete( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
+    int ret = 0;
+    if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
+    {
+        ret = delUser( db, pPath, ppRsp );
+    }
+
     return 0;
 }
 
