@@ -245,7 +245,7 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
     JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_COUNT, &pInfoList );
     if( pInfoList == NULL ) return -1;
 
-    if( strcasecmp( pInfoList->pStr, "user" ) == 0 )
+    if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
         count = JS_DB_getCount( db, "TB_USER" );
 
     sprintf( sValue, "%d", count );
