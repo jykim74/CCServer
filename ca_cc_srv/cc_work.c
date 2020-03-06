@@ -170,7 +170,25 @@ int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
     if( pInfoList == NULL )
     {
         JDB_UserList *pUserList = NULL;
-        ret = JS_DB_getUserList( db, &pUserList );
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getUserPageList( db, nOffset, nLimit, &pUserList );
+        }
+        else
+        {
+            ret = JS_DB_getUserList( db, &pUserList );
+        }
+
         JS_CC_encodeUserList( pUserList, ppRsp );
         if( pUserList ) JS_DB_resetUserList( &pUserList );
     }
@@ -212,4 +230,29 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp )
     JS_CC_resetCodeMsg( &sCodeMsg );
 
     return ret;
+}
+
+int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+    JCC_NameVal sNameVal;
+    int count = 0;
+    char sValue[32];
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_COUNT, &pInfoList );
+    if( pInfoList == NULL ) return -1;
+
+    if( strcasecmp( pInfoList->pStr, "user" ) == 0 )
+        count = JS_DB_getCount( db, "TB_USER" );
+
+    sprintf( sValue, "%d", count );
+
+    JS_CC_setNameVal( &sNameVal, "count", sValue );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+    JS_CC_resetNameVal( &sNameVal );
+
+    return 0;
 }
