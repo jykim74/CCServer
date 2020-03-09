@@ -256,3 +256,150 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
 
     return 0;
 }
+
+int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JCC_CertPolicyList *pCertPolicyList = NULL;
+
+        ret = JS_DB_getCertPolicyList( db, &pCertPolicyList );
+
+        JS_CC_encodeCertPolicyList( pCertPolicyList, ppRsp );
+        if( pCertPolicyList ) JS_DB_resetCertPolicyList( &pCertPolicyList );
+    }
+    else
+    {
+        int nInfoCnt = JS_UTIL_countStrList( pInfoList );
+
+        if( nInfoCnt == 1 )
+        {
+            JCC_CertPolicy sCertPolicy;
+            memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+
+            int nNum = atoi( pInfoList->pStr );
+
+            ret = JS_DB_getCertPolicy( db, nNum, &sCertPolicy );
+
+            JS_CC_encodeCertPolicy( &sCertPolicy, ppRsp );
+            JS_DB_resetCertPolicy( &sCertPolicy );
+        }
+        else if( nInfoCnt == 2 )
+        {
+            int nPolicyNum = atoi( pInfoList->pStr );
+
+            if( strcasecmp( pInfoList->pNext->pStr, "extensions" ) == 0 )
+            {
+               JCC_PolicyExtList *pPolicyExtList = NULL;
+
+               ret = JS_DB_getCertPolicyExtList( db, nPolicyNum, &pPolicyExtList );
+
+               JS_CC_encodePolicyExtList( pPolicyExtList, ppRsp );
+               if( pPolicyExtList ) JS_DB_resetPolicyExtList( &pPolicyExtList );
+            }
+        }
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return ret;
+}
+
+int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JCC_CRLPolicyList *pCRLPolicyList = NULL;
+
+        ret = JS_DB_getCRLPolicyList( db, &pCRLPolicyList );
+
+        JS_CC_encodeCRLPolicyList( pCRLPolicyList, ppRsp );
+        if( pCRLPolicyList ) JS_DB_resetCRLPolicyList( &pCRLPolicyList );
+    }
+    else
+    {
+        int nInfoCnt = JS_UTIL_countStrList( pInfoList );
+
+        if( nInfoCnt == 1 )
+        {
+            JCC_CRLPolicy sCRLPolicy;
+            memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+
+            int nNum = atoi( pInfoList->pStr );
+
+            ret = JS_DB_getCRLPolicy( db, nNum, &sCRLPolicy );
+
+            JS_CC_encodeCRLPolicy( &sCRLPolicy, ppRsp );
+            JS_DB_resetCRLPolicy( &sCRLPolicy );
+        }
+        else if( nInfoCnt == 2 )
+        {
+            int nPolicyNum = atoi( pInfoList->pStr );
+
+            if( strcasecmp( pInfoList->pNext->pStr, "extensions" ) == 0 )
+            {
+               JCC_PolicyExtList *pPolicyExtList = NULL;
+
+               ret = JS_DB_getCRLPolicyExtList( db, nPolicyNum, &pPolicyExtList );
+
+               JS_CC_encodePolicyExtList( pPolicyExtList, ppRsp );
+               if( pPolicyExtList ) JS_DB_resetPolicyExtList( &pPolicyExtList );
+            }
+        }
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return ret;
+}
+
+int getSigners( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_SIGNER, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        int nType = -1;
+        const char *pValue = NULL;
+        JDB_SignerList  *pSignerList = NULL;
+
+        if( pParamList )
+        {
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "type" );
+            if( pValue ) nType = atoi( pValue );
+            ret = JS_DB_getSignerListByType( db, nType, &pSignerList );
+        }
+
+        JS_CC_encodeSignerList( pSignerList, ppRsp );
+        if( pSignerList ) JS_DB_resetSignerList( &pSignerList );
+    }
+    else
+    {
+        int nNum = atoi( pInfoList->pStr );
+        JDB_Signer  sSigner;
+
+        memset( &sSigner, 0x00, sizeof(sSigner));
+
+        ret = JS_DB_getSigner( db, nNum, &sSigner );
+
+        JS_CC_encodeSigner( &sSigner, ppRsp );
+
+        JS_DB_resetSigner( &sSigner );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return 0;
+}

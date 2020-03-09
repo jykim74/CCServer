@@ -19,6 +19,18 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         getCount( db, pPath, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    {
+        getCertPolicies( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
+    {
+        getCRLPolicies( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
+    {
+        getSigners( db, pPath, pParamList, ppRsp );
+    }
 
     return 0;
 }
@@ -57,6 +69,9 @@ int runDelete( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
+
+    JS_UTIL_printNameValList( stdout, "ParamList", pParamList );
+    fprintf( stdout, "Path: %s\n", pPath );
 
     if( nType == JS_HTTP_METHOD_GET )
     {
