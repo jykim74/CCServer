@@ -31,6 +31,18 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         getSigners( db, pPath, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT, strlen(JS_CC_PATH_CERT)) == 0 )
+    {
+        getCerts( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL, strlen(JS_CC_PATH_CRL)) == 0 )
+    {
+        getCRLs( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen(JS_CC_PATH_REVOKED )) == 0 )
+    {
+        getRevokeds( db, pPath, pParamList, ppRsp );
+    }
 
     return 0;
 }

@@ -19,5 +19,8 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp );
 int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getSigners( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getCerts( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getCRLs( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 
 #endif // CC_SRV_H

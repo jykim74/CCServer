@@ -247,6 +247,12 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
 
     if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
         count = JS_DB_getCount( db, "TB_USER" );
+    else if( strcasecmp( pInfoList->pStr, "certs" ) == 0 )
+        count = JS_DB_getCount( db, "TB_CERT" );
+    else if( strcasecmp( pInfoList->pStr, "crls" ) == 0 )
+        count = JS_DB_getCount( db, "TB_CRL" );
+    else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
+        count = JS_DB_getCount( db, "TB_REVOKED" );
 
     sprintf( sValue, "%d", count );
 
@@ -402,4 +408,136 @@ int getSigners( sqlite3 *db, const char *pPath, const JNameValList *pParamList, 
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     return 0;
+}
+
+int getCerts( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_CertList *pCertList = NULL;
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getCertPageList( db, nOffset, nLimit, &pCertList );
+        }
+
+        JS_CC_encodeCertList( pCertList, ppRsp );
+        if( pCertList ) JS_DB_resetCertList( &pCertList );
+    }
+    else
+    {
+        JDB_Cert sCert;
+        memset( &sCert, 0x00, sizeof(sCert));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getCert( db, nSeq, &sCert );
+        JS_CC_encodeCert( &sCert, ppRsp );
+        JS_DB_resetCert( &sCert );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return ret;
+}
+
+int getCRLs( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_CRLList *pCRLList = NULL;
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getCRLPageList( db, nOffset, nLimit, &pCRLList );
+        }
+
+        JS_CC_encodeCRLList( pCRLList, ppRsp );
+        if( pCRLList ) JS_DB_resetCRLList( &pCRLList );
+    }
+    else
+    {
+        JDB_CRL sCRL;
+        memset( &sCRL, 0x00, sizeof(sCRL));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getCRL( db, nSeq, &sCRL );
+        JS_CC_encodeCRL( &sCRL, ppRsp );
+        JS_DB_resetCRL( &sCRL );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return ret;
+}
+
+int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_REVOKED, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_RevokedList *pRevokedList = NULL;
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getRevokedPageList( db, nOffset, nLimit, &pRevokedList );
+        }
+
+        JS_CC_encodeRevokedList( pRevokedList, ppRsp );
+        if( pRevokedList ) JS_DB_resetRevokedList( &pRevokedList );
+    }
+    else
+    {
+        JDB_Revoked sRevoked;
+        memset( &sRevoked, 0x00, sizeof(sRevoked));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getRevoked( db, nSeq, &sRevoked );
+        JS_CC_encodeRevoked( &sRevoked, ppRsp );
+        JS_DB_resetRevoked( &sRevoked );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return ret;
 }
