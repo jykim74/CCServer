@@ -263,6 +263,37 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
     return 0;
 }
 
+int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+    JCC_NameVal sNameVal;
+    int count = 0;
+    char sValue[32];
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_COUNT, &pInfoList );
+    if( pInfoList == NULL ) return -1;
+
+    if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
+        count = JS_DB_getNum( db, "TB_USER" );
+    else if( strcasecmp( pInfoList->pStr, "certs" ) == 0 )
+        count = JS_DB_getNum( db, "TB_CERT" );
+    else if( strcasecmp( pInfoList->pStr, "crls" ) == 0 )
+        count = JS_DB_getNum( db, "TB_CRL" );
+    else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
+        count = JS_DB_getNum( db, "TB_REVOKED" );
+
+    sprintf( sValue, "%d", count );
+
+    JS_CC_setNameVal( &sNameVal, "num", sValue );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+    JS_CC_resetNameVal( &sNameVal );
+
+    return 0;
+}
+
 int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;

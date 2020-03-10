@@ -19,6 +19,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         getCount( db, pPath, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_COUNT)) == 0 )
+    {
+        getNum( db, pPath, pParamList, ppRsp );
+    }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
     {
         getCertPolicies( db, pPath, pParamList, ppRsp );
