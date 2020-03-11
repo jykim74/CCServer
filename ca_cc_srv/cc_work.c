@@ -160,6 +160,27 @@ end :
     return ret;
 }
 
+int addSigner( sqlite3 *db, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JCC_CodeMsg sCodeMsg;
+    JCC_Signer  sSigner;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+    memset( &sSigner, 0x00, sizeof(sSigner));
+
+    JS_CC_decodeSigner( pReq, &sSigner );
+    JS_DB_addSigner( db, &sSigner );
+    JS_DB_resetSigner( &sSigner );
+
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+    return 0;
+}
+
 int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;

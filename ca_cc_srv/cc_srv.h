@@ -13,6 +13,7 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
 
 int authWork( sqlite3 *db, const char *pReq, char **ppRsp );
 int regUser( sqlite3 *db, const char *pReq, char **ppRsp );
+int addSigner( sqlite3 *db, const char *pReq, char **ppRsp );
 int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int addCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );

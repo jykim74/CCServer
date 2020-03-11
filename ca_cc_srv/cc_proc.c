@@ -82,6 +82,8 @@ int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         ret = modCertPolicy( db, pPath, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
         ret = modCRLPolicy( db, pPath, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
+        ret = addSigner( db, pReq, ppRsp );
 
     return 0;
 }
