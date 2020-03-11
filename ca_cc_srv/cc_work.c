@@ -160,6 +160,150 @@ end :
     return ret;
 }
 
+int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+
+    if( pLinkList ) nPolicyNum = atoi( pLinkList->pStr );
+
+    if( nPolicyNum >= 0 )
+    {
+        JCC_PolicyExt   sPolicyExt;
+        memset( &sPolicyExt, 0x00, sizeof(sPolicyExt));
+
+        JS_CC_decodePolicyExt( pReq, &sPolicyExt );
+        JS_DB_addCertPolicyExt( db, &sPolicyExt );
+
+        JS_DB_resetPolicyExt( &sPolicyExt );
+    }
+    else
+    {
+        JCC_CertPolicy sCertPolicy;
+        memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+
+        JS_CC_decodeCertPolicy( pReq, &sCertPolicy );
+        JS_DB_addCertPolicy( db, &sCertPolicy );
+        JS_DB_resetCertPolicy( &sCertPolicy );
+    }
+
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
+}
+
+int addCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+
+    if( pLinkList ) nPolicyNum = atoi( pLinkList->pStr );
+
+    if( nPolicyNum >= 0 )
+    {
+        JCC_PolicyExt   sPolicyExt;
+        memset( &sPolicyExt, 0x00, sizeof(sPolicyExt));
+
+        JS_CC_decodePolicyExt( pReq, &sPolicyExt );
+        JS_DB_addCRLPolicyExt( db, &sPolicyExt );
+
+        JS_DB_resetPolicyExt( &sPolicyExt );
+    }
+    else
+    {
+        JCC_CRLPolicy sCRLPolicy;
+        memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+
+        JS_CC_decodeCRLPolicy( pReq, &sCRLPolicy );
+        JS_DB_addCRLPolicy( db, &sCRLPolicy );
+        JS_DB_resetCRLPolicy( &sCRLPolicy );
+    }
+
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+    return 0;
+}
+
+int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_CertPolicy  sCertPolicy;
+    JCC_CodeMsg     sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+    memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+
+    if( pLinkList == NULL ) return -1;
+
+    nPolicyNum = atoi( pLinkList->pStr );
+
+    JS_CC_decodeCertPolicy( pReq, &sCertPolicy );
+    JS_DB_modCertPolcy( db, nPolicyNum, &sCertPolicy );
+    JS_DB_resetCertPolicy( &sCertPolicy );
+
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
+}
+
+int modCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_CodeMsg     sCodeMsg;
+    JCC_CRLPolicy   sCRLPolicy;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+    memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+
+    if( pLinkList == NULL ) return -1;
+
+    nPolicyNum = atoi( pLinkList->pStr );
+
+    JS_CC_decodeCRLPolicy( pReq, &sCRLPolicy );
+    JS_DB_modCRLPolcy( db, nPolicyNum, &sCRLPolicy );
+    JS_DB_resetCRLPolicy( &sCRLPolicy );
+
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
+}
+
+
 int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
@@ -225,11 +369,102 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp )
     ret = JS_DB_delUser( db, nNum );
 
     JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
-
     JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
     JS_CC_resetCodeMsg( &sCodeMsg );
 
     return ret;
+}
+
+int delCertPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pLinkList = NULL;
+    int nPolicyNum = -1;
+    int bExtOnly = 0;
+
+
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+
+    if( pLinkList == NULL ) return -1;
+
+    nPolicyNum = atoi( pLinkList->pStr );
+
+    if( pParamList )
+    {
+        const char *pValue = JS_UTIL_valueFromNameValList( pParamList, "mode" );
+        if( pValue )
+        {
+            if( strcasecmp( pValue, "extonly") == 0 )
+                bExtOnly = 1;
+        }
+    }
+
+    if( bExtOnly )
+    {
+        JS_DB_delCertPolicyExtsByPolicyNum( db, nPolicyNum );
+    }
+    else
+    {
+        JS_DB_delCertPolicy( db, nPolicyNum );
+        JS_DB_delCertPolicyExtsByPolicyNum( db, nPolicyNum );
+    }
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
+}
+
+int delCRLPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pLinkList = NULL;
+    int nPolicyNum = -1;
+    int bExtOnly = 0;
+
+
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+
+    if( pLinkList == NULL ) return -1;
+
+    nPolicyNum = atoi( pLinkList->pStr );
+
+    if( pParamList )
+    {
+        const char *pValue = JS_UTIL_valueFromNameValList( pParamList, "mode" );
+        if( pValue )
+        {
+            if( strcasecmp( pValue, "extonly") == 0 )
+                bExtOnly = 1;
+        }
+    }
+
+    if( bExtOnly )
+    {
+        JS_DB_delCRLPolicyExtsByPolicyNum( db, nPolicyNum );
+    }
+    else
+    {
+        JS_DB_delCRLPolicy( db, nPolicyNum );
+        JS_DB_delCRLPolicyExtsByPolicyNum( db, nPolicyNum );
+    }
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
 }
 
 int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )

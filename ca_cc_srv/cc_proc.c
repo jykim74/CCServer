@@ -62,21 +62,44 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     {
         ret = regUser( db, pReq, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    {
+        ret = addCertPolicy( db, pPath, pReq, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
+    {
+        ret = addCRLPolicy( db, pPath, pReq, ppRsp );
+    }
 
     return 0;
 }
 
 int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
+    int ret = 0;
+
+    if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+        ret = modCertPolicy( db, pPath, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
+        ret = modCRLPolicy( db, pPath, pReq, ppRsp );
+
     return 0;
 }
 
-int runDelete( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
     {
         ret = delUser( db, pPath, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    {
+        ret = delCertPolicy( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY )) == 0 )
+    {
+        ret = delCRLPolicy( db, pPath, pParamList, ppRsp );
     }
 
     return 0;
@@ -103,7 +126,7 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
     }
     else if( nType == JS_HTTP_METHOD_DELETE )
     {
-        ret = runDelete( db, pPath, pReq, ppRsp );
+        ret = runDelete( db, pPath, pParamList, ppRsp );
     }
 
     return 0;
