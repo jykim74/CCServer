@@ -10,7 +10,8 @@ SOURCES += \
         main.c
 
 HEADERS += \
-    cc_srv.h
+    cc_srv.h \
+    cc_work.h
 
 
 INCLUDEPATH += "../../PKILib"

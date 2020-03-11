@@ -19,7 +19,7 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         getCount( db, pPath, pParamList, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_COUNT)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_NUM)) == 0 )
     {
         getNum( db, pPath, pParamList, ppRsp );
     }
@@ -70,6 +70,10 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     {
         ret = addCRLPolicy( db, pPath, pReq, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen( JS_CC_PATH_REVOKED)) == 0 )
+    {
+        ret = addRevoked( db, pReq, ppRsp );
+    }
 
     return 0;
 }
@@ -95,6 +99,10 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     {
         ret = delUser( db, pPath, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
+    {
+        ret = delSigner( db, pPath, ppRsp );
+    }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
     {
         ret = delCertPolicy( db, pPath, pParamList, ppRsp );
@@ -102,6 +110,10 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY )) == 0 )
     {
         ret = delCRLPolicy( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen(JS_CC_PATH_REVOKED)) == 0 )
+    {
+        ret = delRevoked( db, pPath, ppRsp );
     }
 
     return 0;

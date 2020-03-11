@@ -181,6 +181,74 @@ int addSigner( sqlite3 *db, const char *pReq, char **ppRsp )
     return 0;
 }
 
+int delSigner( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_SIGNER, &pInfoList );
+
+    if( pInfoList == NULL ) return -1;
+
+    int nNum = atoi( pInfoList->pStr );
+
+    ret = JS_DB_delSigner( db, nNum );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return ret;
+}
+
+int delRevoked( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    JStrList    *pInfoList = NULL;
+    JCC_CodeMsg sCodeMsg;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_REVOKED, &pInfoList );
+
+    if( pInfoList == NULL ) return -1;
+
+    int nNum = atoi( pInfoList->pStr );
+
+    ret = JS_DB_delRevoked( db, nNum );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return ret;
+}
+
+int addRevoked( sqlite3 *db, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     nPolicyNum = -1;
+    JCC_CodeMsg sCodeMsg;
+    JCC_Revoked sRevoked;
+
+    memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
+    memset( &sRevoked, 0x00, sizeof(sRevoked));
+
+    JS_CC_decodeRevoked( pReq, &sRevoked );
+    JS_DB_addRevoked( db, &sRevoked );
+    JS_DB_changeCertStatus( db, sRevoked.nCertNum, 1 );
+    JS_DB_resetRevoked( &sRevoked );
+
+    JS_CC_setCodeMsg( &sCodeMsg, 0, "ok" );
+    JS_CC_encodeCodeMsg( &sCodeMsg, ppRsp );
+    JS_CC_resetCodeMsg( &sCodeMsg );
+
+    return 0;
+}
+
 int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
@@ -524,24 +592,33 @@ int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     int ret = 0;
     JStrList    *pInfoList = NULL;
     JCC_NameVal sNameVal;
-    int count = 0;
+    int num = 0;
     char sValue[32];
 
     memset( &sNameVal, 0x00, sizeof(sNameVal));
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_COUNT, &pInfoList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_NUM, &pInfoList );
     if( pInfoList == NULL ) return -1;
 
     if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
-        count = JS_DB_getNum( db, "TB_USER" );
+        num = JS_DB_getNum( db, "TB_USER" );
     else if( strcasecmp( pInfoList->pStr, "certs" ) == 0 )
-        count = JS_DB_getNum( db, "TB_CERT" );
+        num = JS_DB_getNum( db, "TB_CERT" );
     else if( strcasecmp( pInfoList->pStr, "crls" ) == 0 )
-        count = JS_DB_getNum( db, "TB_CRL" );
+        num = JS_DB_getNum( db, "TB_CRL" );
     else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
-        count = JS_DB_getNum( db, "TB_REVOKED" );
+        num = JS_DB_getNum( db, "TB_REVOKED" );
+    else if( strcasecmp( pInfoList->pStr, "cert_policies" ) == 0 )
+        num = JS_DB_getNum( db, "TB_CERT_POLICY" );
+    else if( strcasecmp( pInfoList->pStr, "crl_policies" ) == 0 )
+        num = JS_DB_getNum( db, "TB_CRL_POLICY" );
+    else
+    {
+        fprintf( stderr, "invalid link(%s)\n", pInfoList->pStr );
+        return -1;
+    }
 
-    sprintf( sValue, "%d", count );
+    sprintf( sValue, "%d", num );
 
     JS_CC_setNameVal( &sNameVal, "num", sValue );
     JS_CC_encodeNameVal( &sNameVal, ppRsp );
