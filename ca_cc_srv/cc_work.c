@@ -112,9 +112,7 @@ int authWork( sqlite3 *db, const char *pReq, char **ppRsp )
 end :
     if( ret == JS_CC_OK )
     {
-        sprintf( sResCode, "0000" );
-        sprintf( sResMsg, "OK" );
-        JS_CC_setAuthRsp( &sAuthRsp, sResCode, sResMsg, sToken, NULL );
+        JS_CC_setAuthRsp( &sAuthRsp, sToken, "" );
         JS_CC_encodeAuthRsp( &sAuthRsp, ppRsp );
     }
     else
@@ -187,7 +185,7 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
 end :
     if( ret == JS_CC_OK )
     {
-        JS_CC_setRegUserRsp( &sRegUserRsp, "0000", "OK", sRefNum, pRand );
+        JS_CC_setRegUserRsp( &sRegUserRsp, sRefNum, pRand );
         JS_CC_encodeRegUserRsp( &sRegUserRsp, ppRsp );
     }
     else
