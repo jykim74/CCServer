@@ -45,6 +45,7 @@ int isLogin( sqlite3* db, JNameValList *pHeaderList )
 int CC_Service( JThreadInfo *pThInfo )
 {
     int ret = 0;
+    int status = 0;
     int nType = -1;
     char *pPath = NULL;
 
@@ -91,20 +92,14 @@ int CC_Service( JThreadInfo *pThInfo )
             }
         }
 
-        ret = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
-        if( ret != 0 )
-        {
-            goto end;
-        }
+        status = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
     }
-
-
 
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
+    const char *pRspMethod = JS_HTTP_getStatusMsg( status );
 
-//    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Rsp: %s", pRsp );
-    ret = JS_HTTP_send( pThInfo->nSockFd, JS_HTTP_OK, pRspHeaderList, pRsp );
+    ret = JS_HTTP_send( pThInfo->nSockFd, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
@@ -131,6 +126,7 @@ end:
 int CC_SSL_Service( JThreadInfo *pThInfo )
 {
     int ret = 0;
+    int status = 0;
     int nType = -1;
     char *pPath = NULL;
 
@@ -180,17 +176,14 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
             }
         }
 
-        ret = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
-        if( ret != 0 )
-        {
-            goto end;
-        }
+        status = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
     }
 
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
+    const char *pRspMethod = JS_HTTP_getStatusMsg( status );
 
-    ret = JS_HTTPS_send( pSSL, JS_HTTP_OK, pRspHeaderList, pRsp );
+    ret = JS_HTTPS_send( pSSL, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );

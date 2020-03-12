@@ -5,50 +5,54 @@
 #include "js_bin.h"
 #include "js_http.h"
 #include "js_cc.h"
-#include "js_cc_data.h"
 
 #include "cc_srv.h"
 
 int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
+    int ret = 0;
     if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
     {
-        getUsers( db, pPath, pParamList, ppRsp );
+        ret = getUsers( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_COUNT, strlen(JS_CC_PATH_COUNT)) == 0 )
     {
-        getCount( db, pPath, pParamList, ppRsp );
+        ret = getCount( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_NUM)) == 0 )
     {
-        getNum( db, pPath, pParamList, ppRsp );
+        ret = getNum( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
     {
-        getCertPolicies( db, pPath, pParamList, ppRsp );
+        ret = getCertPolicies( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
     {
-        getCRLPolicies( db, pPath, pParamList, ppRsp );
+        ret = getCRLPolicies( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
     {
-        getSigners( db, pPath, pParamList, ppRsp );
+        ret = getSigners( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT, strlen(JS_CC_PATH_CERT)) == 0 )
     {
-        getCerts( db, pPath, pParamList, ppRsp );
+        ret = getCerts( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CRL, strlen(JS_CC_PATH_CRL)) == 0 )
     {
-        getCRLs( db, pPath, pParamList, ppRsp );
+        ret = getCRLs( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen(JS_CC_PATH_REVOKED )) == 0 )
     {
-        getRevokeds( db, pPath, pParamList, ppRsp );
+        ret = getRevokeds( db, pPath, pParamList, ppRsp );
+    }
+    else
+    {
+        ret = JS_HTTP_STATUS_NOT_FOUND;
     }
 
-    return 0;
+    return ret;
 }
 
 int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
@@ -74,8 +78,12 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     {
         ret = addRevoked( db, pReq, ppRsp );
     }
+    else
+    {
+        ret = JS_HTTP_STATUS_NOT_FOUND;
+    }
 
-    return 0;
+    return ret;
 }
 
 int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
@@ -88,8 +96,10 @@ int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         ret = modCRLPolicy( db, pPath, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
         ret = addSigner( db, pReq, ppRsp );
+    else
+        ret = JS_HTTP_STATUS_NOT_FOUND;
 
-    return 0;
+    return ret;
 }
 
 int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
@@ -115,8 +125,12 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     {
         ret = delRevoked( db, pPath, ppRsp );
     }
+    else
+    {
+        ret = JS_HTTP_STATUS_NOT_FOUND;
+    }
 
-    return 0;
+    return ret;
 }
 
 int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const JNameValList *pParamList, char **ppRsp )
@@ -143,5 +157,5 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
         ret = runDelete( db, pPath, pParamList, ppRsp );
     }
 
-    return 0;
+    return ret;
 }

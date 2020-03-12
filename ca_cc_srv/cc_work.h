@@ -5,7 +5,6 @@
 #include "js_bin.h"
 #include "js_util.h"
 #include "js_db.h"
-#include "js_cc_data.h"
 
 
 int authWork( sqlite3 *db, const char *pReq, char **ppRsp );
