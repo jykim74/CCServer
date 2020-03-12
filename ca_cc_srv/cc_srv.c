@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "js_pki.h"
 #include "js_http.h"
@@ -9,6 +10,7 @@
 #include "js_ssl.h"
 #include "js_log.h"
 #include "js_cc.h"
+#include "js_cfg.h"
 
 #include "cc_srv.h"
 
@@ -17,7 +19,11 @@ SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
 
-const char* g_dbPath = "/Users/jykim/work/CAMan/ca.db";
+
+JEnvList        *g_pEnvList = NULL;
+char            *g_pDBPath = NULL;
+static char     g_sConfPath[1024];
+int             g_bVerbose = 0;
 
 int isLogin( sqlite3* db, JNameValList *pHeaderList )
 {
@@ -57,10 +63,10 @@ int CC_Service( JThreadInfo *pThInfo )
     JNameValList    *pRspHeaderList = NULL;
     JNameValList    *pParamList = NULL;
 
-    sqlite3* db = JS_DB_open( g_dbPath );
+    sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
-        fprintf( stderr, "fail to open db file(%s)\n", g_dbPath );
+        fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
         ret = -1;
         goto end;
     }
@@ -140,10 +146,10 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     JNameValList    *pRspHeaderList = NULL;
     JNameValList    *pParamList = NULL;
 
-    sqlite3* db = JS_DB_open( g_dbPath );
+    sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
-        fprintf( stderr, "fail to open db file(%s)\n", g_dbPath );
+        fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
         ret = -1;
         goto end;
     }
@@ -208,15 +214,54 @@ end:
     return 0;
 }
 
-int Init()
+int serverInit()
 {
-//    const char *pCACertPath = "/Users/jykim/work/certs/root_cert.der";
-    const char *pCertPath = "/Users/jykim/work/certs/server_cert.der";
-    const char *pPriPath = "/Users/jykim/work/certs/server_prikey.der";
+    int     ret = 0;
+    const char  *value = NULL;
 
-//    JS_BIN_fileRead( pCACertPath, &g_binCACert );
-    JS_BIN_fileRead( pCertPath, &g_binCert );
-    JS_BIN_fileRead( pPriPath, &g_binPri );
+    ret = JS_CFG_readConfig( g_sConfPath, &g_pEnvList );
+    if( ret != 0 )
+    {
+        fprintf( stderr, "fail to read config file(%s:%d)\n", g_sConfPath, ret );
+        exit(0);
+    }
+
+    value = JS_CFG_getValue( g_pEnvList, "CA_CERT_PATH" );
+    if( value == NULL )
+    {
+        fprintf( stderr, "You have to set 'CA_CERT_PATH'\n" );
+        exit(0);
+    }
+
+    ret = JS_BIN_fileRead( value, &g_binCert );
+    if( ret != 0 )
+    {
+        fprintf( stderr, "fail to read certificate file(%s:%d)\n", value, ret );
+        exit(0);
+    }
+
+    value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
+    if( value == NULL )
+    {
+        fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
+        exit(0);
+    }
+
+    ret = JS_BIN_fileRead( value, &g_binPri );
+    if( ret != 0 )
+    {
+        fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
+        exit( 0 );
+    }
+
+    value = JS_CFG_getValue( g_pEnvList, "CC_DB_PATH" );
+    if( value == NULL )
+    {
+        fprintf( stderr, "You have to set 'CC_DB_PATH'" );
+        exit(0);
+    }
+
+    g_pDBPath = value;
 
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
@@ -224,9 +269,47 @@ int Init()
     return 0;
 }
 
+int quitDaemon( const char *pCmd )
+{
+    return 0;
+}
+
+void printUsage()
+{
+
+}
+
 int main( int argc, char *argv[] )
 {
-    Init();
+    int     nRet = 0;
+    int     nStatus = 0;
+    int     nOpt = 0;
+
+    sprintf( g_sConfPath, "%s", CC_DEFAULT_CFG_PATH );
+
+    while(( nOpt = getopt( argc, argv, "c:qth")) != -1 )
+    {
+        switch( nOpt )
+        {
+            case 'q':
+                return quitDaemon(argv[0]);
+                break;
+
+            case 'h':
+                printUsage();
+                return 0;
+
+            case 't':
+                g_bVerbose = 1;
+                break;
+
+            case 'c':
+                sprintf( g_sConfPath, "%s", optarg );
+                break;
+        }
+    }
+
+    serverInit();
 
     JS_THD_logInit( "./log", "cc", 2 );
     JS_THD_registerService( "JS_CC", NULL, 9050, 4, NULL, CC_Service );

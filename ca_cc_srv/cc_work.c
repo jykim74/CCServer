@@ -5,6 +5,11 @@
 #include "js_pki.h"
 #include "js_util.h"
 #include "js_http.h"
+#include "js_cfg.h"
+
+extern  JEnvList    *g_pEnvList;
+extern  BIN         g_binCert;
+extern  BIN         g_binPri;
 
 void _setCodeMsg( int nCode, const char *pMsg, char **ppJson )
 {
