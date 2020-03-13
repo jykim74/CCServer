@@ -19,7 +19,7 @@ void _setCodeMsg( int nCode, const char *pMsg, char **ppJson )
     JCC_CodeMsg sCodeMsg;
 
     memset( &sCodeMsg, 0x00, sizeof(sCodeMsg));
-    JS_CC_setCodeMsg( nCode, pMsg, &sCodeMsg );
+    JS_CC_setCodeMsg( &sCodeMsg, nCode, pMsg );
     JS_CC_encodeCodeMsg( &sCodeMsg, ppJson );
     JS_CC_resetCodeMsg( &sCodeMsg );
 }
@@ -1248,14 +1248,20 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JDB_PolicyExtList   *pPolicyExtList = NULL;
     JDB_User            sUser;
     JIssueCertInfo      sIssueCertInfo;
+    JCertInfo           sCertInfo;
     JReqInfo            sReqInfo;
+    JDB_Cert            sCert;
 
     BIN                 binCert = {0,0};
     BIN                 binCSR = {0,0};
+    BIN                 binPub = {0,0};
 
     char                sSerial[32];
     long                uNotBefore = 0;
     long                uNotAfter = 0;
+    char                *pHexCert = NULL;
+    char                *pHexCACert = NULL;
+    char                sKeyID[128];
 
     time_t now_t = time(NULL);
 
@@ -1266,6 +1272,9 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     memset( &sIssueCertInfo, 0x00, sizeof(sIssueCertInfo));
     memset( &sReqInfo, 0x00, sizeof(sReqInfo));
     memset( sSerial, 0x00, sizeof(sSerial));
+    memset( &sCert, 0x00, sizeof(sCert));
+    memset( &sCertInfo, 0x00, sizeof(sCertInfo));
+    memset( &sKeyID, 0x00, sizeof(sKeyID));
 
     ret = JS_CC_decodeIssueCertReq( pReq, &sIssueCertReq );
     if( ret != 0 )
@@ -1309,11 +1318,14 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
+
+    JS_BIN_decodeHex( sReqInfo.pPublicKey, &binPub );
+    JS_PKI_getKeyIdentifier( &binPub, sKeyID );
+
     if( sCertPolicy.nNotBefore <= 0 )
     {
         uNotBefore = 0;
         uNotAfter = sCertPolicy.nNotAfter * 60 * 60 * 24;
-        uNotBefore = 0;
     }
     else
     {
@@ -1340,6 +1352,50 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    JS_BIN_encodeHex( &binCert, &pHexCert );
+    JS_BIN_encodeHex( &g_binCert, &pHexCACert );
+
+    if( nUserNum < 0 )
+    {
+        nUserNum = JS_DB_getSeq( db, "TB_USER" );
+        sUser.nNum = nUserNum;
+
+        ret = JS_DB_addUser( db, &sUser );
+        if( ret != 0 )
+        {
+            ret = JS_CC_ERROR_SYSTEM;
+            goto end;
+        }
+    }
+
+    JS_PKI_getCertInfo( &binCert, &sCertInfo, NULL );
+    JS_DB_setCert( &sCert,
+                   -1,
+                   -1,
+                   sUser.nNum,
+                   sCertInfo.pSignAlgorithm,
+                   pHexCert,
+                   0,
+                   0,
+                   0,
+                   sCertInfo.pSubjectName,
+                   0,
+                   sCertInfo.pSerial,
+                   sCertInfo.pDNHash,
+                   sKeyID );
+
+    ret = JS_DB_addCert( db, &sCert );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    JS_CC_setIssueCertRsp( &sIssueCertRsp, nUserNum, sReqInfo.pSubjectDN, pHexCert, pHexCACert );
+    JS_CC_encodeIssueCertRsp( &sIssueCertRsp, ppRsp );
+
+
+
     ret = 0;
 
 end:
@@ -1351,7 +1407,10 @@ end:
     JS_PKI_resetReqInfo( &sReqInfo );
     JS_PKI_resetIssueCertInfo( &sIssueCertInfo );
     JS_BIN_reset( &binCert );
-
+    if( pHexCert ) JS_free( pHexCert );
+    if( pHexCACert ) JS_free( pHexCACert );
+    JS_DB_resetCert( &sCert );
+    JS_BIN_reset( &binPub );
 
     if( ret != 0 )
     {
