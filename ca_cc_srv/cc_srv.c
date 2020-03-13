@@ -12,12 +12,14 @@
 #include "js_cc.h"
 #include "js_cfg.h"
 
-#include "cc_srv.h"
+#include "cc_proc.h"
+#include "cc_tools.h"
 
 
 SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
+int         g_nKeyType = JS_PKI_KEY_TYPE_RSA;
 
 
 JEnvList        *g_pEnvList = NULL;

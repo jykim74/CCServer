@@ -6,7 +6,7 @@
 #include "js_http.h"
 #include "js_cc.h"
 
-#include "cc_srv.h"
+#include "cc_proc.h"
 
 int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
@@ -77,6 +77,10 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen( JS_CC_PATH_REVOKED)) == 0 )
     {
         ret = addRevoked( db, pReq, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_ISSUE_CERT, strlen( JS_CC_PATH_ISSUE_CERT)) == 0 )
+    {
+        ret = issueCert( db, pReq, ppRsp );
     }
     else
     {
