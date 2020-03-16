@@ -12,7 +12,6 @@ int genToken( const char *pPassword, time_t tTime, char *pToken );
 int makeCert( JDB_CertPolicy *pDBCertPolicy,
               JDB_PolicyExtList *pDBPolicyExtList,
               JIssueCertInfo *pIssueCertInfo,
-              int nKeyType,
               BIN *pCert );
 
 int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,

@@ -1348,7 +1348,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                              uNotAfter,
                              sReqInfo.pPublicKey );
 
-    ret = makeCert( &sCertPolicy, pPolicyExtList, &sIssueCertInfo, g_nKeyType, &binCert );
+    ret = makeCert( &sCertPolicy, pPolicyExtList, &sIssueCertInfo, &binCert );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -1583,6 +1583,25 @@ end :
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
+
+    return status;
+}
+
+int getCA( char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    char    *pHex = NULL;
+    JCC_NameVal sNameVal;
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+
+    JS_BIN_encodeHex( &g_binCert, &pHex );
+
+    JS_CC_setNameVal( &sNameVal, "CACERT", pHex );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+
+    JS_CC_resetNameVal( &sNameVal );
 
     return status;
 }

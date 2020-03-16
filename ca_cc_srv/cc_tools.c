@@ -10,6 +10,7 @@
 
 extern BIN g_binCert;
 extern BIN g_binPri;
+extern int g_nKeyType;
 
 int genToken( const char *pPassword, time_t tTime, char *pToken )
 {
@@ -48,7 +49,6 @@ end :
 int makeCert( JDB_CertPolicy *pDBCertPolicy,
               JDB_PolicyExtList *pDBPolicyExtList,
               JIssueCertInfo *pIssueCertInfo,
-              int nKeyType,
               BIN *pCert )
 {
     int ret = 0;
@@ -118,7 +118,7 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
         pDBCurList = pDBCurList->pNext;
     }
 
-    ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, nKeyType, &g_binPri, &g_binCert, pCert );
+    ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, g_nKeyType, &g_binPri, &g_binCert, pCert );
 
 
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
@@ -219,7 +219,7 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
     ret = JS_PKI_makeCRL( &sIssueCRLInfo,
                           pExtInfoList,
                           pRevokedList,
-                          JS_PKI_KEY_TYPE_RSA,
+                          g_nKeyType,
                           &g_binPri,
                           &g_binCert,
                           pCRL );

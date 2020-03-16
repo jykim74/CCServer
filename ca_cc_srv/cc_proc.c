@@ -47,6 +47,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getRevokeds( db, pPath, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CA, strlen(JS_CC_PATH_CA)) == 0 )
+    {
+        ret = getCA( ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;

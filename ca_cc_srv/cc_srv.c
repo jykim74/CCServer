@@ -27,6 +27,7 @@ JEnvList        *g_pEnvList = NULL;
 char            *g_pDBPath = NULL;
 static char     g_sConfPath[1024];
 int             g_bVerbose = 0;
+
 LDAP            *g_pLDAP = NULL;
 
 int isLogin( sqlite3* db, JNameValList *pHeaderList )
@@ -228,6 +229,15 @@ int serverInit()
     {
         fprintf( stderr, "fail to read config file(%s:%d)\n", g_sConfPath, ret );
         exit(0);
+    }
+
+    value = JS_CFG_getValue( g_pEnvList, "CA_KEY_TYPE" );
+    if( value )
+    {
+        if( strcasecmp( value, "ECC") == 0 )
+            g_nKeyType = JS_PKI_KEY_TYPE_ECC;
+        else
+            g_nKeyType = JS_PKI_KEY_TYPE_RSA;
     }
 
     value = JS_CFG_getValue( g_pEnvList, "CA_CERT_PATH" );
