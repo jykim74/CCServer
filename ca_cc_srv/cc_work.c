@@ -9,11 +9,13 @@
 #include "js_cfg.h"
 
 #include "cc_tools.h"
+#include "js_ldap.h"
 
 extern  JEnvList    *g_pEnvList;
 extern  BIN         g_binCert;
 extern  BIN         g_binPri;
 extern  int         g_nKeyType;
+extern  LDAP        *g_pLDAP;
 
 void _setCodeMsg( int nCode, const char *pMsg, char **ppJson )
 {
@@ -1395,7 +1397,10 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_CC_setIssueCertRsp( &sIssueCertRsp, nUserNum, sReqInfo.pSubjectDN, pHexCert, pHexCACert );
     JS_CC_encodeIssueCertRsp( &sIssueCertRsp, ppRsp );
 
-
+    if( g_pLDAP )
+    {
+        JS_LDAP_publishData( g_pLDAP, sCertInfo.pSubjectName, JS_LDAP_TYPE_USER_CERTIFICATE, &binCert );
+    }
 
     ret = 0;
 
@@ -1555,6 +1560,8 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
+
+    if( g_pLDAP ) JS_LDAP_publishData( g_pLDAP, sCRLInfo.pIssuerName, JS_LDAP_TYPE_CERTIFICATE_REVOCATION_LIST, &binCRL );
 
     ret = 0;
 

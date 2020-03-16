@@ -14,6 +14,7 @@
 
 #include "cc_proc.h"
 #include "cc_tools.h"
+#include "js_ldap.h"
 
 
 SSL_CTX     *g_pSSLCTX = NULL;
@@ -26,6 +27,7 @@ JEnvList        *g_pEnvList = NULL;
 char            *g_pDBPath = NULL;
 static char     g_sConfPath[1024];
 int             g_bVerbose = 0;
+LDAP            *g_pLDAP = NULL;
 
 int isLogin( sqlite3* db, JNameValList *pHeaderList )
 {
@@ -264,6 +266,68 @@ int serverInit()
     }
 
     g_pDBPath = value;
+
+    value = JS_CFG_getValue( g_pEnvList, "LDAP_USE" );
+    if( value && strcasecmp( value, "YES" ) == 0 )
+    {
+        int nLdapPort = -1;
+        const char *pLdapHost = NULL;
+        const char *pBindDN = NULL;
+        const char *pSecert = NULL;
+
+        value = JS_CFG_getValue( g_pEnvList, "LDAP_HOST" );
+
+        if( value == NULL )
+        {
+            fprintf( stderr, "You have to set 'LDAP_HOST'\n" );
+            exit(0);
+        }
+
+        pLdapHost = value;
+
+        value = JS_CFG_getValue( g_pEnvList, "LDAP_PORT");
+        if( value == NULL )
+        {
+            fprintf( stderr, "You have to set 'LDAP_PORT'\n" );
+            exit(0);
+        }
+
+        nLdapPort = atoi( value );
+
+        value = JS_CFG_getValue( g_pEnvList, "LDAP_BINDDN" );
+        if( value == NULL )
+        {
+            fprintf( stderr, "You have to set 'LDAP_BINDDN'\n" );
+            exit(0);
+        }
+
+        pBindDN = value;
+
+        value = JS_CFG_getValue( g_pEnvList, "LDAP_SECRET" );
+        if( value == NULL )
+        {
+            fprintf( stderr, "You have to set 'LDAP_SECRET'\n" );
+            exit(0);
+        }
+
+        pSecert = value;
+
+        g_pLDAP = JS_LDAP_init( pLdapHost, nLdapPort );
+        if( g_pLDAP == NULL )
+        {
+            fprintf( stderr, "fail to initialize ldap(%s:%d)\n", pLdapHost, nLdapPort );
+            exit(0);
+        }
+
+        ret = JS_LDAP_bind( g_pLDAP, pBindDN, pSecert );
+        if( ret != LDAP_SUCCESS )
+        {
+            fprintf( stderr, "fail to bind ldap(%s:%d)\n", pBindDN, ret );
+            exit(0);
+        }
+
+        printf( "success to connect to ldap server\n" );
+    }
 
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
