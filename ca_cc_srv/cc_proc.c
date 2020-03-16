@@ -82,6 +82,10 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     {
         ret = issueCert( db, pReq, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_ISSUE_CRL, strlen( JS_CC_PATH_ISSUE_CRL)) == 0 )
+    {
+        ret = issueCRL( db, pReq, ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;

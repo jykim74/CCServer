@@ -126,3 +126,108 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
     return ret;
 }
 
+int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
+             JDB_PolicyExtList  *pDBPolicyExtList,
+             JDB_RevokedList    *pDBRevokedList,
+             BIN *pCRL )
+{
+    int     ret = 0;
+    int     nVersion = 1;
+    long    uLastUpdate = 0;
+    long    uNextUpdate = 0;
+    JIssueCRLInfo       sIssueCRLInfo;
+
+    JExtensionInfoList  *pExtInfoList = NULL;
+    JRevokeInfoList     *pRevokedList = NULL;
+
+    memset( &sIssueCRLInfo, 0x00, sizeof(sIssueCRLInfo));
+
+    if( pDBCRLPolicy->nLastUpdate <= 0 )
+    {
+        uLastUpdate = 0;
+        uNextUpdate = pDBCRLPolicy->nNextUpdate * 60 * 60 * 24;
+    }
+    else
+    {
+        time_t now_t = time(NULL);
+        uLastUpdate = pDBCRLPolicy->nLastUpdate - now_t;
+        uNextUpdate = pDBCRLPolicy->nNextUpdate - now_t;
+    }
+
+    while( pDBPolicyExtList )
+    {
+        JExtensionInfo  sExtInfo;
+
+        memset( &sExtInfo, 0x00, sizeof(sExtInfo));
+
+        JS_PKI_setExtensionFromDB( &sExtInfo, &pDBPolicyExtList->sPolicyExt );
+
+        if( pExtInfoList == NULL )
+            JS_PKI_createExtensionInfoList( &sExtInfo, &pExtInfoList );
+        else
+            JS_PKI_appendExtensionInfoList( pExtInfoList, &sExtInfo );
+
+        pDBPolicyExtList = pDBPolicyExtList->pNext;
+        JS_PKI_resetExtensionInfo( &sExtInfo );
+    }
+
+    while( pDBRevokedList )
+    {
+        JRevokeInfo     sRevokeInfo;
+        JExtensionInfo  sExtReason;
+        JDB_PolicyExt   sDBPolicyExt;
+
+        char        sReason[64];
+
+        memset( &sRevokeInfo, 0x00, sizeof(sRevokeInfo));
+        memset( &sExtReason, 0x00, sizeof(sExtReason));
+        memset( &sDBPolicyExt, 0x00, sizeof(sDBPolicyExt));
+
+        sprintf( sReason, "%d", pDBRevokedList->sRevoked.nReason );
+        JS_DB_setPolicyExt( &sDBPolicyExt,
+                            -1,
+                            pDBCRLPolicy->nNum,
+                            1,
+                            JS_PKI_ExtNameCRLReason,
+                            sReason );
+
+        JS_PKI_setExtensionFromDB( &sExtReason, &sDBPolicyExt );
+
+        JS_PKI_setRevokeInfo( &sRevokeInfo,
+                              pDBRevokedList->sRevoked.pSerial,
+                              pDBRevokedList->sRevoked.nRevokedDate,
+                              &sExtReason );
+
+        if( pRevokedList == NULL )
+            JS_PKI_createRevokeInfoList( &sRevokeInfo, &pRevokedList );
+        else
+            JS_PKI_appendRevokeInfoList( pRevokedList, &sRevokeInfo );
+
+        JS_PKI_resetRevokeInfo( &sRevokeInfo );
+        JS_PKI_resetExtensionInfo( &sExtReason );
+        JS_DB_resetPolicyExt( &sDBPolicyExt );
+
+        pDBRevokedList = pDBRevokedList->pNext;
+    }
+
+    JS_PKI_setIssueCRLInfo( &sIssueCRLInfo,
+                            nVersion,
+                            pDBCRLPolicy->pHash,
+                            uLastUpdate,
+                            uNextUpdate );
+
+    ret = JS_PKI_makeCRL( &sIssueCRLInfo,
+                          pExtInfoList,
+                          pRevokedList,
+                          JS_PKI_KEY_TYPE_RSA,
+                          &g_binPri,
+                          &g_binCert,
+                          pCRL );
+
+end :
+    JS_PKI_resetIssueCRLInfo( &sIssueCRLInfo );
+    if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
+    if( pRevokedList ) JS_PKI_resetRevokeInfoList( &pRevokedList );
+
+    return ret;
+}

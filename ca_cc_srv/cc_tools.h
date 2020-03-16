@@ -15,4 +15,9 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
               int nKeyType,
               BIN *pCert );
 
+int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
+             JDB_PolicyExtList  *pDBPolicyExtList,
+             JDB_RevokedList    *pDBRevokedList,
+             BIN *pCRL );
+
 #endif // CC_TOOLS_H

@@ -30,6 +30,6 @@ int getCerts( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
 int getCRLs( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int issueCert( sqlite3 *db, const char *pReq, char **ppRsp );
-
+int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp );
 
 #endif

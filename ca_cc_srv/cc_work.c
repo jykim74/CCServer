@@ -3,6 +3,7 @@
 #include "js_bin.h"
 #include "js_db.h"
 #include "js_pki.h"
+#include "js_pki_ext.h"
 #include "js_util.h"
 #include "js_http.h"
 #include "js_cfg.h"
@@ -1411,6 +1412,164 @@ end:
     if( pHexCACert ) JS_free( pHexCACert );
     JS_DB_resetCert( &sCert );
     JS_BIN_reset( &binPub );
+
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    return status;
+}
+
+int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
+{
+    int         ret = 0;
+    int         status = JS_HTTP_STATUS_OK;
+
+    JCC_IssueCRLReq     sCRLReq;
+    JCC_IssueCRLRsp     sCRLRsp;
+
+    JDB_CRLPolicy       sDBPolicy;
+    JDB_PolicyExtList   *pDBPolicyExtList = NULL;
+    JDB_PolicyExtList   *pDBCurExtList = NULL;
+    JDB_RevokedList     *pDBRevokedList = NULL;
+    JDB_CRL             sDBCRL;
+
+    BIN     binCRL = {0,0};
+    char    *pHexCRL = NULL;
+    JCRLInfo            sCRLInfo;
+
+    memset( &sCRLReq, 0x00, sizeof(sCRLReq));
+    memset( &sCRLRsp, 0x00, sizeof(sCRLRsp));
+    memset( &sDBPolicy, 0x00, sizeof(sDBPolicy));
+    memset( &sCRLInfo, 0x00, sizeof(sCRLInfo));
+    memset( &sDBCRL, 0x00, sizeof(sDBCRL));
+
+    ret = JS_CC_decodeIssueCRLReq( pReq, &sCRLReq );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_WRONG_MSG;
+        goto end;
+    }
+
+    ret = JS_DB_getCRLPolicy( db, sCRLReq.nCRLPolicyNum, &sDBPolicy );
+    if( ret != 1 )
+    {
+        ret = JS_CC_ERROR_NO_DATA;
+        goto end;
+    }
+
+    ret = JS_DB_getCRLPolicyExtList( db, sCRLReq.nCRLPolicyNum, &pDBPolicyExtList );
+    if( ret < 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    int nSeq = JS_DB_getSeq( db, "TB_CRL" );
+
+    pDBCurExtList = pDBPolicyExtList;
+
+    while( pDBCurExtList )
+    {
+        if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameIAN ) == 0 )
+        {
+            BIN binCert = {0,0};
+            char        sHexID[256];
+            char        sHexSerial[256];
+            char        sHexIssuer[1024];
+            char        *pValue = NULL;
+            int         len = 0;
+
+            memset( sHexID, 0x00, sizeof(sHexID));
+            memset( sHexSerial, 0x00, sizeof(sHexSerial));
+            memset( sHexIssuer, 0x00, sizeof(sHexIssuer));
+
+            JS_PKI_getAuthorityKeyIdentifier(  &g_binCert, sHexID, sHexSerial, sHexIssuer );
+
+            len = strlen( sHexID );
+            len += strlen( sHexSerial );
+            len += strlen( sHexIssuer );
+
+            pValue = (char *)JS_malloc( len + 128 );
+            sprintf( pValue, "KEYID$%s#ISSUER$%2#SERIAL$%3", sHexID, sHexIssuer, sHexSerial );
+            if( pDBCurExtList->sPolicyExt.pValue )
+            {
+                JS_free( pDBCurExtList->sPolicyExt.pValue );
+            }
+
+            pDBCurExtList->sPolicyExt.pValue = pValue;
+        }
+        else if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameCRLNum ) == 0 )
+        {
+            if( strcasecmp( pDBCurExtList->sPolicyExt.pValue, "auto") == 0 )
+            {
+                char *pValue = NULL;
+                pValue = (char *)JS_malloc( 32 );
+                sprintf( pValue, "%04x", nSeq );
+                JS_free( pDBCurExtList->sPolicyExt.pValue );
+                pDBCurExtList->sPolicyExt.pValue = pValue;
+            }
+        }
+
+        pDBCurExtList = pDBCurExtList->pNext;
+    }
+
+    ret = JS_DB_getRevokedList( db, &pDBRevokedList );
+    if( ret < 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    ret = makeCRL( &sDBPolicy, pDBPolicyExtList, pDBRevokedList, &binCRL );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    JS_BIN_encodeHex( &binCRL, &pHexCRL );
+
+    ret = JS_PKI_getCRLInfo( &binCRL, &sCRLInfo, NULL, NULL );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+
+
+    JS_CC_setIssueCRLRsp( &sCRLRsp,
+                          nSeq,
+                          sCRLInfo.pIssuerName,
+                          sCRLReq.bDownload ? pHexCRL : "" );
+
+    JS_CC_encodeIssueCRLRsp( &sCRLRsp, ppRsp );
+
+    JS_DB_setCRL( &sDBCRL, nSeq, -1, sDBPolicy.pHash, pHexCRL );
+    ret = JS_DB_addCRL( db, &sDBCRL );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    ret = 0;
+
+end :
+    JS_CC_resetIssueCRLReq( &sCRLReq );
+    JS_CC_resetIssueCRLRsp( &sCRLRsp );
+    JS_DB_resetCRLPolicy( &sDBPolicy );
+    JS_PKI_resetCRLInfo( &sCRLInfo );
+    if( pHexCRL ) JS_free( pHexCRL );
+    JS_DB_resetCRL( &sDBCRL );
+
+    JS_BIN_reset( &binCRL );
+
+    if( pDBPolicyExtList ) JS_DB_resetPolicyExtList( &pDBPolicyExtList );
+    if( pDBRevokedList ) JS_DB_resetRevokedList( &pDBRevokedList );
 
     if( ret != 0 )
     {
