@@ -1385,7 +1385,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                    0,
                    sCertInfo.pSerial,
                    sCertInfo.pDNHash,
-                   sKeyID );
+                   sKeyID,
+                   "");
 
     ret = JS_DB_addCert( db, &sCert );
     if( ret != 0 )
