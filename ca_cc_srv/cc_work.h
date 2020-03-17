@@ -32,5 +32,6 @@ int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList,
 int issueCert( sqlite3 *db, const char *pReq, char **ppRsp );
 int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp );
 int getCA( char **ppRsp );
+int publishLDAP( sqlite3 *db, const char *pPath, char **ppRsp );
 
 #endif

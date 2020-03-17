@@ -1605,3 +1605,114 @@ int getCA( char **ppRsp )
 
     return status;
 }
+
+int publishLDAP( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int     ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+
+    JStrList    *pInfoList = NULL;
+    const char  *pCmd = NULL;
+    const char  *pType = NULL;
+    const char  *pData = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_REVOKED, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    pCmd = JS_UTIL_valueFromNameValList( pInfoList, "cmd" );
+    pType = JS_UTIL_valueFromNameValList( pInfoList, "type" );
+    pData = JS_UTIL_valueFromNameValList( pInfoList, "data" );
+
+    if( pCmd == NULL || pType == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    if( strcasecmp( pCmd, "publish" ) == 0 )
+    {
+        int nNum = atoi( pData );
+        int nType = -1;
+        const char *pDN = NULL;
+        BIN binData = {0,0};
+        JCertInfo   sCertInfo;
+        JCRLInfo    sCRLInfo;
+
+        memset( &sCertInfo, 0x00, sizeof(sCertInfo));
+        memset( &sCRLInfo, 0x00, sizeof(sCRLInfo));
+
+        if( strcasecmp( pType, "cacert" ) == 0 )
+        {
+            nType = JS_LDAP_TYPE_CA_CERTIFICATE;
+
+            JS_BIN_copy( &binData, &g_binCert );
+            JS_PKI_getCertInfo( &g_binCert, &sCertInfo, NULL );
+            pDN = sCertInfo.pSubjectName;
+        }
+        else if( strcasecmp( pType, "crl" ) == 0 )
+        {
+            nType = JS_LDAP_TYPE_CERTIFICATE_REVOCATION_LIST;
+            JDB_CRL sCRL;
+
+            memset( &sCRL, 0x00, sizeof(sCRL));
+            JS_DB_getCRL( db, nNum, &sCRL );
+
+            JS_BIN_decodeHex( sCRL.pCRL, &binData );
+            JS_PKI_getCRLInfo( &binData, &sCRLInfo, NULL, NULL );
+            JS_DB_resetCRL( &sCRL );
+
+            pDN = sCRLInfo.pIssuerName;
+        }
+        else if( strcasecmp( pType, "cert" ) == 0 )
+        {
+            nType = JS_LDAP_TYPE_USER_CERTIFICATE;
+            JDB_Cert sCert;
+
+            memset( &sCert, 0x00, sizeof(sCert));
+            JS_DB_getCert( db, nNum, &sCert );
+
+            JS_BIN_decodeHex( sCert.pCert, &binData );
+            JS_PKI_getCertInfo( &binData, &sCertInfo, NULL );
+            JS_DB_resetCert( &sCert );
+
+            pDN = sCertInfo.pSubjectName;
+        }
+
+        if( binData.nLen > 0 )
+        {
+            ret = JS_LDAP_publishData( g_pLDAP, pDN, nType, &binData );
+            if( ret != 0 )
+            {
+                ret = JS_CC_ERROR_SYSTEM;
+                goto end;
+            }
+        }
+        else
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_PKI_resetCertInfo( &sCertInfo );
+        JS_PKI_resetCRLInfo( &sCRLInfo );
+
+        JS_BIN_reset( &binData );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    }
+
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return status;
+}

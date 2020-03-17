@@ -108,6 +108,8 @@ int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         ret = modCRLPolicy( db, pPath, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
         ret = addSigner( db, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_LDAP, strlen(JS_CC_PATH_LDAP)) == 0 )
+        ret = publishLDAP( db, pPath, ppRsp );
     else
         ret = JS_HTTP_STATUS_NOT_FOUND;
 
