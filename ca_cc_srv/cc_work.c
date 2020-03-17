@@ -1472,9 +1472,9 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    int nSeq = JS_DB_getSeq( db, "TB_CRL" );
-
     pDBCurExtList = pDBPolicyExtList;
+    int nSeq = JS_DB_getSeq( db, "TB_CRL" );
+    nSeq++;
 
     while( pDBCurExtList )
     {
@@ -1544,6 +1544,13 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    ret = JS_DB_addCRL( db, &sDBCRL );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
 
 
     JS_CC_setIssueCRLRsp( &sCRLRsp,
@@ -1554,12 +1561,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_CC_encodeIssueCRLRsp( &sCRLRsp, ppRsp );
 
     JS_DB_setCRL( &sDBCRL, nSeq, -1, sDBPolicy.pHash, pHexCRL );
-    ret = JS_DB_addCRL( db, &sDBCRL );
-    if( ret != 0 )
-    {
-        ret = JS_CC_ERROR_SYSTEM;
-        goto end;
-    }
+
 
     if( g_pLDAP ) JS_LDAP_publishData( g_pLDAP, sCRLInfo.pIssuerName, JS_LDAP_TYPE_CERTIFICATE_REVOCATION_LIST, &binCRL );
 
