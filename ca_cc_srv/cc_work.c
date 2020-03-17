@@ -1606,7 +1606,7 @@ int getCA( char **ppRsp )
     return status;
 }
 
-int publishLDAP( sqlite3 *db, const char *pPath, char **ppRsp )
+int publishLDAP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -1614,19 +1614,13 @@ int publishLDAP( sqlite3 *db, const char *pPath, char **ppRsp )
     JStrList    *pInfoList = NULL;
     const char  *pCmd = NULL;
     const char  *pType = NULL;
-    const char  *pData = NULL;
+    const char  *pNum = NULL;
 
     JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_REVOKED, &pInfoList );
 
-    if( pInfoList == NULL )
-    {
-        ret = JS_CC_ERROR_WRONG_LINK;
-        goto end;
-    }
-
-    pCmd = JS_UTIL_valueFromNameValList( pInfoList, "cmd" );
-    pType = JS_UTIL_valueFromNameValList( pInfoList, "type" );
-    pData = JS_UTIL_valueFromNameValList( pInfoList, "data" );
+    pCmd = JS_UTIL_valueFromNameValList( pParamList, "cmd" );
+    pType = JS_UTIL_valueFromNameValList( pParamList, "type" );
+    pNum = JS_UTIL_valueFromNameValList( pParamList, "num" );
 
     if( pCmd == NULL || pType == NULL )
     {
@@ -1636,12 +1630,14 @@ int publishLDAP( sqlite3 *db, const char *pPath, char **ppRsp )
 
     if( strcasecmp( pCmd, "publish" ) == 0 )
     {
-        int nNum = atoi( pData );
+        int nNum = -1;
         int nType = -1;
         const char *pDN = NULL;
         BIN binData = {0,0};
         JCertInfo   sCertInfo;
         JCRLInfo    sCRLInfo;
+
+        if( pNum ) nNum = atoi( pNum );
 
         memset( &sCertInfo, 0x00, sizeof(sCertInfo));
         memset( &sCRLInfo, 0x00, sizeof(sCRLInfo));

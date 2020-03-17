@@ -59,7 +59,7 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     return ret;
 }
 
-int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int runPost( sqlite3 *db, const char *pPath, const JNameValList *pParamList, const char *pReq, char **ppRsp )
 {
     int ret = 0;
     if( strncasecmp( pPath, JS_CC_PATH_AUTH, strlen( JS_CC_PATH_AUTH) ) == 0)
@@ -98,7 +98,7 @@ int runPost( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     return ret;
 }
 
-int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int runPut( sqlite3 *db, const char *pPath, const JNameValList *pParamList, const char *pReq, char **ppRsp )
 {
     int ret = 0;
 
@@ -109,7 +109,7 @@ int runPut( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
         ret = addSigner( db, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_LDAP, strlen(JS_CC_PATH_LDAP)) == 0 )
-        ret = publishLDAP( db, pPath, ppRsp );
+        ret = publishLDAP( db, pPath, pParamList, ppRsp );
     else
         ret = JS_HTTP_STATUS_NOT_FOUND;
 
@@ -160,11 +160,11 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
     }
     else if( nType == JS_HTTP_METHOD_POST )
     {
-        ret = runPost( db, pPath, pReq, ppRsp );
+        ret = runPost( db, pPath, pParamList, pReq, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_PUT )
     {
-        ret = runPut( db, pPath, pReq, ppRsp );
+        ret = runPut( db, pPath, pParamList, pReq, ppRsp );
     }
     else if( nType == JS_HTTP_METHOD_DELETE )
     {
