@@ -1254,6 +1254,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JCertInfo           sCertInfo;
     JReqInfo            sReqInfo;
     JDB_Cert            sCert;
+    JExtensionInfoList  *pExtInfoList = NULL;
+    char                *pCRLDP = NULL;
 
     BIN                 binCert = {0,0};
     BIN                 binCSR = {0,0};
@@ -1346,6 +1348,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                              sReqInfo.pSubjectDN,
                              uNotBefore,
                              uNotAfter,
+                             sReqInfo.nKeyAlg,
                              sReqInfo.pPublicKey );
 
     ret = makeCert( &sCertPolicy, pPolicyExtList, &sIssueCertInfo, &binCert );
@@ -1371,7 +1374,9 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         }
     }
 
-    JS_PKI_getCertInfo( &binCert, &sCertInfo, NULL );
+    JS_PKI_getCertInfo( &binCert, &sCertInfo, &pExtInfoList );
+    JS_PKI_getExtensionValue( pExtInfoList, JS_PKI_ExtNameCRLDP, &pCRLDP );
+
     JS_DB_setCert( &sCert,
                    -1,
                    -1,
@@ -1386,7 +1391,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                    sCertInfo.pSerial,
                    sCertInfo.pDNHash,
                    sKeyID,
-                   "");
+                   pCRLDP ? pCRLDP : "" );
 
     ret = JS_DB_addCert( db, &sCert );
     if( ret != 0 )
@@ -1418,6 +1423,8 @@ end:
     if( pHexCACert ) JS_free( pHexCACert );
     JS_DB_resetCert( &sCert );
     JS_BIN_reset( &binPub );
+    if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
+    if( pCRLDP ) JS_free( pCRLDP );
 
     if( ret != 0 )
     {
