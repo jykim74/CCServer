@@ -1489,7 +1489,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
 
     while( pDBCurExtList )
     {
-        if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameIAN ) == 0 )
+        if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
         {
             BIN binCert = {0,0};
             char        sHexID[256];
