@@ -1255,6 +1255,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JReqInfo            sReqInfo;
     JDB_Cert            sCert;
     JExtensionInfoList  *pExtInfoList = NULL;
+    char                *pHexCRLDP = NULL;
     char                *pCRLDP = NULL;
 
     BIN                 binCert = {0,0};
@@ -1375,7 +1376,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     }
 
     JS_PKI_getCertInfo( &binCert, &sCertInfo, &pExtInfoList );
-    JS_PKI_getExtensionValue( pExtInfoList, JS_PKI_ExtNameCRLDP, &pCRLDP );
+    JS_PKI_getExtensionValue( pExtInfoList, JS_PKI_ExtNameCRLDP, &pHexCRLDP );
+    if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pCRLDP );
 
     JS_DB_setCert( &sCert,
                    -1,
@@ -1425,6 +1427,7 @@ end:
     JS_BIN_reset( &binPub );
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
     if( pCRLDP ) JS_free( pCRLDP );
+    if( pHexCRLDP ) JS_free( pHexCRLDP );
 
     if( ret != 0 )
     {
