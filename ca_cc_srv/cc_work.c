@@ -1509,7 +1509,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
             len += strlen( sHexIssuer );
 
             pValue = (char *)JS_malloc( len + 128 );
-            sprintf( pValue, "KEYID$%s#ISSUER$%2#SERIAL$%3", sHexID, sHexIssuer, sHexSerial );
+            sprintf( pValue, "KEYID$%s#ISSUER$%s#SERIAL$%s", sHexID, sHexIssuer, sHexSerial );
             if( pDBCurExtList->sPolicyExt.pValue )
             {
                 JS_free( pDBCurExtList->sPolicyExt.pValue );
@@ -1554,6 +1554,8 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
+
+    JS_DB_setCRL( &sDBCRL, nSeq, -1, sCRLInfo.pSignAlgorithm, pHexCRL );
 
     ret = JS_DB_addCRL( db, &sDBCRL );
     if( ret != 0 )
