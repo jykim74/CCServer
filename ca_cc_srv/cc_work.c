@@ -121,6 +121,8 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
     JCC_RegUserReq  sRegUserReq;
     JCC_RegUserRsp  sRegUserRsp;
 
+    time_t now_t = time(NULL);
+
     memset( &sDBUser, 0x00, sizeof(sDBUser ));
     memset( &sRegUserReq, 0x00, sizeof(sRegUserReq));
     memset( &sRegUserRsp, 0x00, sizeof(sRegUserRsp));
@@ -147,6 +149,7 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
 
     ret = JS_DB_setUser( &sDBUser,
                          -1,
+                         now_t,
                          sRegUserReq.pName,
                          sRegUserReq.pSSN,
                          sRegUserReq.pEmail,
@@ -1302,7 +1305,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     }
     else
     {
-        JS_DB_setUser( &sUser, -1, sIssueCertReq.pName, sIssueCertReq.pSSN, sIssueCertReq.pEmail, 0, NULL, NULL );
+        JS_DB_setUser( &sUser, -1, now_t, sIssueCertReq.pName, sIssueCertReq.pSSN, sIssueCertReq.pEmail, 0, NULL, NULL );
     }
 
     nPolicyNum = sIssueCertReq.nCertPolicyNum;
@@ -1381,6 +1384,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     JS_DB_setCert( &sCert,
                    -1,
+                   now_t,
                    -1,
                    sUser.nNum,
                    sCertInfo.pSignAlgorithm,
@@ -1443,6 +1447,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     int         ret = 0;
     int         status = JS_HTTP_STATUS_OK;
 
+
     JCC_IssueCRLReq     sCRLReq;
     JCC_IssueCRLRsp     sCRLRsp;
 
@@ -1455,6 +1460,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     BIN     binCRL = {0,0};
     char    *pHexCRL = NULL;
     JCRLInfo            sCRLInfo;
+    time_t now_t = time(NULL);
 
     memset( &sCRLReq, 0x00, sizeof(sCRLReq));
     memset( &sCRLRsp, 0x00, sizeof(sCRLRsp));
@@ -1555,7 +1561,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    JS_DB_setCRL( &sDBCRL, nSeq, -1, sCRLInfo.pSignAlgorithm, pHexCRL );
+    JS_DB_setCRL( &sDBCRL, nSeq, now_t, -1, sCRLInfo.pSignAlgorithm, pHexCRL );
 
     ret = JS_DB_addCRL( db, &sDBCRL );
     if( ret != 0 )
@@ -1564,17 +1570,12 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-
-
     JS_CC_setIssueCRLRsp( &sCRLRsp,
                           nSeq,
                           sCRLInfo.pIssuerName,
                           sCRLReq.bDownload ? pHexCRL : "" );
 
     JS_CC_encodeIssueCRLRsp( &sCRLRsp, ppRsp );
-
-    JS_DB_setCRL( &sDBCRL, nSeq, -1, sDBPolicy.pHash, pHexCRL );
-
 
     if( g_pLDAP ) JS_LDAP_publishData( g_pLDAP, sCRLInfo.pIssuerName, JS_LDAP_TYPE_CERTIFICATE_REVOCATION_LIST, &binCRL );
 
