@@ -10,6 +10,7 @@
 
 #include "cc_tools.h"
 #include "js_ldap.h"
+#include "js_pki_tools.h"
 
 extern  JEnvList    *g_pEnvList;
 extern  BIN         g_binCert;
@@ -1241,6 +1242,24 @@ end :
     return status;
 }
 
+int _getRealDN( const char *pDNTemplate, JDB_User *pDBUser, char **ppRealDN )
+{
+    int ret = 0;
+    JNameValList    *pNameValList = NULL;
+
+    if( pDBUser == NULL || pDNTemplate == NULL ) return -1;
+
+    JS_UTIL_createNameValList2( ":name:", pDBUser->pName, &pNameValList );
+    JS_UTIL_appendNameValList2( pNameValList, ":email:", pDBUser->pEmail );
+    JS_UTIL_appendNameValList2( pNameValList, ":ssn:", pDBUser->pSSN );
+
+    ret = JS_PKI_getReplacedDN( pDNTemplate, pNameValList, ppRealDN );
+
+    if( pNameValList ) JS_UTIL_resetNameValList( &pNameValList );
+
+    return ret;
+}
+
 int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 {
     int ret = 0;
@@ -1259,6 +1278,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JDB_Cert            sCert;
     JExtensionInfoList  *pExtInfoList = NULL;
     char                *pHexCRLDP = NULL;
+    char                *pTemplateDP = NULL;
     char                *pCRLDP = NULL;
 
     BIN                 binCert = {0,0};
@@ -1271,6 +1291,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     char                *pHexCert = NULL;
     char                *pHexCACert = NULL;
     char                sKeyID[128];
+    char                *pRealDN = NULL;
 
     time_t now_t = time(NULL);
 
@@ -1345,11 +1366,20 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     int nSeq = JS_DB_getSeq( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
 
+    if( strcasecmp( sCertPolicy.pDNTemplate, "#CSR") == 0 )
+    {
+        pRealDN = JS_strdup( sReqInfo.pSubjectDN );
+    }
+    else
+    {
+        _getRealDN( sCertPolicy.pDNTemplate, &sUser, &pRealDN );
+    }
+
     JS_PKI_setIssueCertInfo( &sIssueCertInfo,
                              sCertPolicy.nVersion,
                              sSerial,
                              sCertPolicy.pHash,
-                             sReqInfo.pSubjectDN,
+                             pRealDN,
                              uNotBefore,
                              uNotAfter,
                              sReqInfo.nKeyAlg,
@@ -1380,7 +1410,13 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     JS_PKI_getCertInfo( &binCert, &sCertInfo, &pExtInfoList );
     JS_PKI_getExtensionValue( pExtInfoList, JS_PKI_ExtNameCRLDP, &pHexCRLDP );
-    if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pCRLDP );
+    if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pTemplateDP );
+
+    if( pTemplateDP )
+    {
+        JS_PKI_getDP( pTemplateDP, nSeq, sCertPolicy.nDivideNum, &pCRLDP );
+        if( pCRLDP == NULL ) pCRLDP = JS_strdup( pTemplateDP );
+    }
 
     JS_DB_setCert( &sCert,
                    -1,
@@ -1430,8 +1466,10 @@ end:
     JS_DB_resetCert( &sCert );
     JS_BIN_reset( &binPub );
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
+    if( pTemplateDP ) JS_free( pTemplateDP );
     if( pCRLDP ) JS_free( pCRLDP );
     if( pHexCRLDP ) JS_free( pHexCRLDP );
+    if( pRealDN ) JS_free( pRealDN );
 
     if( ret != 0 )
     {
@@ -1538,7 +1576,8 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         pDBCurExtList = pDBCurExtList->pNext;
     }
 
-    ret = JS_DB_getRevokedList( db, &pDBRevokedList );
+//    ret = JS_DB_getRevokedList( db, &pDBRevokedList );
+    ret = JS_DB_getRevokedListByCRLDP( db, sCRLReq.pCRLDP, &pDBRevokedList );
     if( ret < 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -1726,5 +1765,48 @@ end :
 
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return status;
+}
+
+int getCRDPs( sqlite3 *db, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JStrList    *pCRLDPList = NULL;
+    JStrList    *pCurList = NULL;
+    JNameValList    *pNameValList = NULL;
+
+    ret = JS_DB_getCRLDPListFromCert( db, &pCRLDPList );
+    if( ret < 1 )
+    {
+        ret = JS_CC_ERROR_NO_DATA;
+        goto end;
+    }
+
+    pCurList = pCRLDPList;
+    while( pCurList )
+    {
+        JNameVal    sNameVal;
+
+        if( pNameValList == NULL )
+            JS_UTIL_createNameValList2( "CRLDP", pCurList->pStr, &pNameValList );
+        else
+            JS_UTIL_appendNameValList2( pNameValList, "CRLDP", pCurList->pStr );
+
+        pCurList = pCurList->pNext;
+    }
+
+    JS_CC_encodeNameValList( pNameValList, ppRsp );
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pCRLDPList ) JS_UTIL_resetStrList( &pCRLDPList );
+
     return status;
 }
