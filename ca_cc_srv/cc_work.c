@@ -1249,9 +1249,9 @@ int _getRealDN( const char *pDNTemplate, JDB_User *pDBUser, char **ppRealDN )
 
     if( pDBUser == NULL || pDNTemplate == NULL ) return -1;
 
-    JS_UTIL_createNameValList2( ":name:", pDBUser->pName, &pNameValList );
-    JS_UTIL_appendNameValList2( pNameValList, ":email:", pDBUser->pEmail );
-    JS_UTIL_appendNameValList2( pNameValList, ":ssn:", pDBUser->pSSN );
+    JS_UTIL_createNameValList2( JS_PKI_TEMPLATE_NAME, pDBUser->pName, &pNameValList );
+    JS_UTIL_appendNameValList2( pNameValList, JS_PKI_TEMPLATE_EMAIL, pDBUser->pEmail );
+    JS_UTIL_appendNameValList2( pNameValList, JS_PKI_TEMPLATE_SSN, pDBUser->pSSN );
 
     ret = JS_PKI_getReplacedDN( pDNTemplate, pNameValList, ppRealDN );
 
@@ -1414,7 +1414,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     if( pTemplateDP )
     {
-        JS_PKI_getDP( pTemplateDP, nSeq, sCertPolicy.nDivideNum, &pCRLDP );
+        JS_PKI_getDP( pTemplateDP, nSeq, &pCRLDP );
         if( pCRLDP == NULL ) pCRLDP = JS_strdup( pTemplateDP );
     }
 
