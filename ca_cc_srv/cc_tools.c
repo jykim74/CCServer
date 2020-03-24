@@ -65,49 +65,6 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
 
         memset( &sExtInfo,0x00, sizeof(sExtInfo));
 
-
-        if( strcasecmp( pDBCurList->sPolicyExt.pSN, JS_PKI_ExtNameSKI ) == 0 )
-        {
-            BIN binPub = {0,0};
-            char    sHexID[128];
-
-            memset( sHexID, 0x00, sizeof(sHexID));
-            JS_BIN_decodeHex(pIssueCertInfo->pPublicKey, &binPub);
-            JS_PKI_getKeyIdentifier( &binPub, sHexID );
-
-            if( pDBCurList->sPolicyExt.pValue )
-            {
-                JS_free( pDBCurList->sPolicyExt.pValue );
-                pDBCurList->sPolicyExt.pValue = NULL;
-            }
-
-            pDBCurList->sPolicyExt.pValue = JS_strdup( sHexID );
-            JS_BIN_reset( &binPub );
-        }
-        else if( strcasecmp( pDBCurList->sPolicyExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
-        {
-            char    sHexID[128];
-            char    sHexSerial[128];
-            char    sHexIssuer[1024];
-
-            char    sBuf[2048];
-
-            memset( sHexID, 0x00, sizeof(sHexID));
-            memset( sHexSerial, 0x00, sizeof(sHexSerial));
-            memset( sHexIssuer, 0x00, sizeof(sHexIssuer));
-            memset( sBuf, 0x00, sizeof(sBuf));
-
-            JS_PKI_getAuthorityKeyIdentifier( &g_binCert, sHexID, sHexSerial, sHexIssuer );
-            sprintf( sBuf, "KEYID$%s#ISSUER$%s#SERIAL$%s", sHexID, sHexIssuer, sHexSerial );
-            if( pDBCurList->sPolicyExt.pValue )
-            {
-                JS_free( pDBCurList->sPolicyExt.pValue );
-                pDBCurList->sPolicyExt.pValue = NULL;
-            }
-
-            pDBCurList->sPolicyExt.pValue = JS_strdup( sBuf );
-        }
-
         JS_PKI_setExtensionFromDB( &sExtInfo, &pDBCurList->sPolicyExt );
 
         if( pExtInfoList == NULL )

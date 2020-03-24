@@ -1271,6 +1271,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JCC_IssueCertRsp    sIssueCertRsp;
     JDB_CertPolicy      sCertPolicy;
     JDB_PolicyExtList   *pPolicyExtList = NULL;
+    JDB_PolicyExtList   *pCurPolicyExtList = NULL;
     JDB_User            sUser;
     JIssueCertInfo      sIssueCertInfo;
     JCertInfo           sCertInfo;
@@ -1278,7 +1279,6 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JDB_Cert            sCert;
     JExtensionInfoList  *pExtInfoList = NULL;
     char                *pHexCRLDP = NULL;
-    char                *pTemplateDP = NULL;
     char                *pCRLDP = NULL;
 
     BIN                 binCert = {0,0};
@@ -1375,6 +1375,70 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         _getRealDN( sCertPolicy.pDNTemplate, &sUser, &pRealDN );
     }
 
+    pCurPolicyExtList = pPolicyExtList;
+
+    while( pCurPolicyExtList )
+    {
+        JExtensionInfo sExtInfo;
+
+        memset( &sExtInfo,0x00, sizeof(sExtInfo));
+
+
+        if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameSKI ) == 0 )
+        {
+            BIN binPub = {0,0};
+            char    sHexID[128];
+
+            memset( sHexID, 0x00, sizeof(sHexID));
+            JS_BIN_decodeHex(sReqInfo.pPublicKey, &binPub);
+            JS_PKI_getKeyIdentifier( &binPub, sHexID );
+
+            if( pCurPolicyExtList->sPolicyExt.pValue )
+            {
+                JS_free( pCurPolicyExtList->sPolicyExt.pValue );
+                pCurPolicyExtList->sPolicyExt.pValue = NULL;
+            }
+
+            pCurPolicyExtList->sPolicyExt.pValue = JS_strdup( sHexID );
+            JS_BIN_reset( &binPub );
+        }
+        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
+        {
+            char    sHexID[128];
+            char    sHexSerial[128];
+            char    sHexIssuer[1024];
+
+            char    sBuf[2048];
+
+            memset( sHexID, 0x00, sizeof(sHexID));
+            memset( sHexSerial, 0x00, sizeof(sHexSerial));
+            memset( sHexIssuer, 0x00, sizeof(sHexIssuer));
+            memset( sBuf, 0x00, sizeof(sBuf));
+
+            JS_PKI_getAuthorityKeyIdentifier( &g_binCert, sHexID, sHexSerial, sHexIssuer );
+            sprintf( sBuf, "KEYID$%s#ISSUER$%s#SERIAL$%s", sHexID, sHexIssuer, sHexSerial );
+            if( pCurPolicyExtList->sPolicyExt.pValue )
+            {
+                JS_free( pCurPolicyExtList->sPolicyExt.pValue );
+                pCurPolicyExtList->sPolicyExt.pValue = NULL;
+            }
+
+            pCurPolicyExtList->sPolicyExt.pValue = JS_strdup( sBuf );
+        }
+        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameCRLDP) == 0 )
+        {
+            char *pDP = NULL;
+            JS_PKI_getDP( pCurPolicyExtList->sPolicyExt.pValue, nSeq, &pDP );
+            if( pDP )
+            {
+                if( pCurPolicyExtList->sPolicyExt.pValue ) JS_free( pCurPolicyExtList->sPolicyExt.pValue );
+                pCurPolicyExtList->sPolicyExt.pValue = pDP;
+            }
+        }
+
+        pCurPolicyExtList = pCurPolicyExtList->pNext;
+    }
+
     JS_PKI_setIssueCertInfo( &sIssueCertInfo,
                              sCertPolicy.nVersion,
                              sSerial,
@@ -1410,13 +1474,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     JS_PKI_getCertInfo( &binCert, &sCertInfo, &pExtInfoList );
     JS_PKI_getExtensionValue( pExtInfoList, JS_PKI_ExtNameCRLDP, &pHexCRLDP );
-    if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pTemplateDP );
-
-    if( pTemplateDP )
-    {
-        JS_PKI_getDP( pTemplateDP, nSeq, &pCRLDP );
-        if( pCRLDP == NULL ) pCRLDP = JS_strdup( pTemplateDP );
-    }
+    if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pCRLDP );
 
     JS_DB_setCert( &sCert,
                    -1,
@@ -1466,7 +1524,6 @@ end:
     JS_DB_resetCert( &sCert );
     JS_BIN_reset( &binPub );
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
-    if( pTemplateDP ) JS_free( pTemplateDP );
     if( pCRLDP ) JS_free( pCRLDP );
     if( pHexCRLDP ) JS_free( pHexCRLDP );
     if( pRealDN ) JS_free( pRealDN );
