@@ -65,7 +65,7 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
 
         memset( &sExtInfo,0x00, sizeof(sExtInfo));
 
-        JS_PKI_setExtensionFromDB( &sExtInfo, &pDBCurList->sPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBCurList->sPolicyExt );
 
         if( pExtInfoList == NULL )
             JS_PKI_createExtensionInfoList( &sExtInfo, &pExtInfoList );
@@ -117,7 +117,7 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
 
         memset( &sExtInfo, 0x00, sizeof(sExtInfo));
 
-        JS_PKI_setExtensionFromDB( &sExtInfo, &pDBPolicyExtList->sPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBPolicyExtList->sPolicyExt );
 
         if( pExtInfoList == NULL )
             JS_PKI_createExtensionInfoList( &sExtInfo, &pExtInfoList );
@@ -148,7 +148,7 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
                             JS_PKI_ExtNameCRLReason,
                             sReason );
 
-        JS_PKI_setExtensionFromDB( &sExtReason, &sDBPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtReason, &sDBPolicyExt );
 
         JS_PKI_setRevokeInfo( &sRevokeInfo,
                               pDBRevokedList->sRevoked.pSerial,
