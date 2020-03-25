@@ -1242,7 +1242,7 @@ end :
     return status;
 }
 
-int _getRealDN( const char *pDNTemplate, JDB_User *pDBUser, char **ppRealDN )
+int _getReplaceValue( const char *pDNTemplate, JDB_User *pDBUser, char **ppRealDN )
 {
     int ret = 0;
     JNameValList    *pNameValList = NULL;
@@ -1372,7 +1372,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     }
     else
     {
-        _getRealDN( sCertPolicy.pDNTemplate, &sUser, &pRealDN );
+        _getReplaceValue( sCertPolicy.pDNTemplate, &sUser, &pRealDN );
     }
 
     pCurPolicyExtList = pPolicyExtList;
@@ -1433,6 +1433,19 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
             {
                 if( pCurPolicyExtList->sPolicyExt.pValue ) JS_free( pCurPolicyExtList->sPolicyExt.pValue );
                 pCurPolicyExtList->sPolicyExt.pValue = pDP;
+            }
+        }
+        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameSAN ) == 0 )
+        {
+            char *pReplaced = NULL;
+            _getReplaceValue( pCurPolicyExtList->sPolicyExt.pValue, &sUser, &pReplaced );
+
+            if( pReplaced )
+            {
+                if( pCurPolicyExtList->sPolicyExt.pValue )
+                    JS_free( pCurPolicyExtList->sPolicyExt.pValue );
+
+                pCurPolicyExtList->sPolicyExt.pValue = pReplaced;
             }
         }
 
