@@ -1880,3 +1880,69 @@ end :
 
     return status;
 }
+
+int getCertStatus( sqlite3 *db, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JDB_Cert    sDBCert;
+    JCC_CertStatus  sCertStatus;
+
+    memset( &sDBCert, 0x00, sizeof(sDBCert));
+    memset( &sCertStatus, 0x00, sizeof(sCertStatus));
+
+    if( pParamList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    const char *pSerial = JS_UTIL_valueFromNameValList( pParamList, "serial" );
+    if( pSerial == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    ret = JS_DB_getCertBySerial( db, pSerial, &sDBCert );
+    if( ret != 1 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    if( sDBCert.nStatus > 0 )
+    {
+        JDB_Revoked sDBRevoked;
+        memset( &sDBRevoked, 0x00, sizeof(sDBRevoked));
+
+        ret = JS_DB_getRevokedByCertNum( db, sDBCert.nNum, &sDBRevoked );
+        if( ret != 1 )
+        {
+            ret = JS_CC_ERROR_SYSTEM;
+            goto end;
+        }
+
+        JS_CC_setCertStatus( &sCertStatus,
+                             sDBCert.nStatus,
+                             sDBRevoked.nReason,
+                             sDBRevoked.nRevokedDate );
+    }
+    else
+    {
+        JS_CC_setCertStatus( &sCertStatus, 0, -1, -1 );
+    }
+
+    JS_CC_encodeCertStatus( &sCertStatus, ppRsp );
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+
+    return status;
+}

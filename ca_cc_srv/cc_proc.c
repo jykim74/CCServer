@@ -55,6 +55,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getCRDPs( db, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_STATUS, strlen(JS_CC_PATH_CERT_STATUS)) == 0 )
+    {
+        ret = getCertStatus( db, pParamList, ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;
