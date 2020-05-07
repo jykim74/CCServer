@@ -1284,6 +1284,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     BIN                 binCert = {0,0};
     BIN                 binCSR = {0,0};
     BIN                 binPub = {0,0};
+	BIN					binPubVal = {0,0};
 
     char                sSerial[32];
     long                uNotBefore = 0;
@@ -1350,7 +1351,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
 
     JS_BIN_decodeHex( sReqInfo.pPublicKey, &binPub );
-    JS_PKI_getKeyIdentifier( &binPub, sKeyID );
+	JS_PKI_getPublicKeyValue( &binPub, &binPubVal );
+    JS_PKI_getKeyIdentifier( &binPubVal, sKeyID );
 
     if( sCertPolicy.nNotBefore <= 0 )
     {
@@ -1536,6 +1538,7 @@ end:
     if( pHexCACert ) JS_free( pHexCACert );
     JS_DB_resetCert( &sCert );
     JS_BIN_reset( &binPub );
+	JS_BIN_reset( &binPubVal );
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
     if( pCRLDP ) JS_free( pCRLDP );
     if( pHexCRLDP ) JS_free( pHexCRLDP );
