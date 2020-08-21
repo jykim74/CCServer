@@ -1,3 +1,7 @@
+#ifdef WIN32
+#include <vld.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +19,7 @@
 #include "cc_proc.h"
 #include "cc_tools.h"
 #include "js_ldap.h"
+
 
 
 SSL_CTX     *g_pSSLCTX = NULL;
@@ -357,6 +362,10 @@ void printUsage()
 
 }
 
+void test()
+{
+    char* tmp = malloc( 100 );
+}
 
 int main( int argc, char *argv[] )
 {
@@ -389,6 +398,7 @@ int main( int argc, char *argv[] )
     }
 
     serverInit();
+    test();
 
     JS_THD_logInit( "./log", "cc", 2 );
     JS_THD_registerService( "JS_CC", NULL, 9050, 4, NULL, CC_Service );
