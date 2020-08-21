@@ -44,3 +44,6 @@ win32 {
 
     LIBS += -L"C:\msys64\mingw32\lib" -lltdl -lldap -llber -lsqlite3 -lws2_32
 }
+
+DISTFILES += \
+    ../ca_cc_srv.cfg

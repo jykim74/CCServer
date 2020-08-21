@@ -342,6 +342,8 @@ int serverInit()
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
 
+    printf( "CC_Server Init OK\n" );
+
     return 0;
 }
 
@@ -362,7 +364,7 @@ int main( int argc, char *argv[] )
     int     nStatus = 0;
     int     nOpt = 0;
 
-    sprintf( g_sConfPath, "%s", CC_DEFAULT_CFG_PATH );
+    sprintf( g_sConfPath, "%s", "../ca_cc_srv.cfg" );
 
     while(( nOpt = getopt( argc, argv, "c:qth")) != -1 )
     {
