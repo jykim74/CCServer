@@ -482,6 +482,58 @@ end :
     return status;
 }
 
+int getAdmins( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_ADMIN, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_AdminList *pAdminList = NULL;
+
+        ret = JS_DB_getAdminList( db, &pAdminList );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeAdminList( pAdminList, ppRsp );
+        if( pAdminList ) JS_DB_resetAdminList( &pAdminList );
+    }
+    else
+    {
+        JDB_Admin sAdmin;
+        memset( &sAdmin, 0x00, sizeof(sAdmin));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getAdmin( db, nSeq, &sAdmin );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeAdmin( &sAdmin, ppRsp );
+        JS_DB_resetAdmin( &sAdmin );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return status;
+}
 
 int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {

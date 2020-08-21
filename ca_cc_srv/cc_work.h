@@ -17,6 +17,7 @@ int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
 int addCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int modCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
+int getAdmins( sqlite3 *db, const char *pPath, char **ppRsp );
 int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );

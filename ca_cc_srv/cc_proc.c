@@ -15,6 +15,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getUsers( db, pPath, pParamList, ppRsp );
     }
+    if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
+    {
+        ret = getAdmins( db, pPath, ppRsp );
+    }
     else if( strncasecmp( pPath, JS_CC_PATH_COUNT, strlen(JS_CC_PATH_COUNT)) == 0 )
     {
         ret = getCount( db, pPath, pParamList, ppRsp );

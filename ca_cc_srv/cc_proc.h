@@ -7,7 +7,7 @@
 #include "js_db.h"
 #include "cc_work.h"
 
-#define CC_DEFAULT_CFG_PATH        "/Users/jykim/work/ca_cc_srv/ca_cc_srv.cfg"
+// #define CC_DEFAULT_CFG_PATH        "/Users/jykim/work/ca_cc_srv/ca_cc_srv.cfg"
 
 
 int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const JNameValList *pParamList, char **ppRsp );
