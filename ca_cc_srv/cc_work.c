@@ -58,7 +58,7 @@ int authWork( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    ret = JS_DB_getAdmin( db, sAuthReq.pUserName, &sAdmin );
+    ret = JS_DB_getAdminByName( db, sAuthReq.pUserName, &sAdmin );
     if( ret < 1 )
     {
         ret = JS_CC_ERROR_INVALID_USER;
