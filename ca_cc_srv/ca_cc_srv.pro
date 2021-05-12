@@ -31,21 +31,37 @@ mac {
 }
 
 win32 {
-    INCLUDEPATH += "../../PKILib/lib/win32/cmpossl/include"
-    INCLUDEPATH += "C:\msys64\mingw32\include"
-    INCLUDEPATH += "C:/Program Files (x86)/Visual Leak Detector/include"
+    contains(QT_ARCH, i386) {
+        message( "ca_cc_srv 32bit" )
 
-    Debug {
-        LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_32_bit-Debug/debug" -lPKILib
-        LIBS += -L"../../PKILib/lib/win32/debug/cmpossl/lib" -lcrypto -lssl
-        LIBS += "C:/Program Files (x86)/Visual Leak Detector/lib/Win32/vld.lib"
-        LIBS += "C:/Program Files (x86)/Visual Leak Detector/bin/Win32/vld_x86.dll"
+        INCLUDEPATH += "../../PKILib/lib/win32/cmpossl/include"
+        INCLUDEPATH += "C:\msys64\mingw32\include"
+
+        Debug {
+            LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_32_bit-Debug/debug" -lPKILib
+            LIBS += -L"../../PKILib/lib/win32/debug/cmpossl/lib" -lcrypto -lssl
+        } else {
+            LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_32_bit-Release/release" -lPKILib
+            LIBS += -L"../../PKILib/lib/win32/cmpossl/lib" -lcrypto -lssl
+        }
+
+        LIBS += -L"C:\msys64\mingw32\lib" -lltdl -lldap -llber -lsqlite3 -lws2_32
     } else {
-        LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_32_bit-Release/release" -lPKILib
-        LIBS += -L"../../PKILib/lib/win32/cmpossl/lib" -lcrypto -lssl
-    }
+        message( "ca_cc_srv 64bit" )
 
-    LIBS += -L"C:\msys64\mingw32\lib" -lltdl -lldap -llber -lsqlite3 -lws2_32
+        INCLUDEPATH += "../../PKILib/lib/win64/cmpossl/include"
+        INCLUDEPATH += "C:\msys64\mingw64\include"
+
+        Debug {
+            LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_64_bit-Debug/debug" -lPKILib
+            LIBS += -L"../../PKILib/lib/win64/debug/cmpossl/lib" -lcrypto -lssl
+        } else {
+            LIBS += -L"../../build-PKILib-Desktop_Qt_5_13_2_MinGW_64_bit-Release/release" -lPKILib
+            LIBS += -L"../../PKILib/lib/win64/cmpossl/lib" -lcrypto -lssl
+        }
+
+        LIBS += -L"C:\msys64\mingw64\lib" -lltdl -lldap -llber -lsqlite3 -lws2_32
+    }
 }
 
 DISTFILES += \

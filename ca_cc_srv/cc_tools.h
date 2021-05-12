@@ -9,13 +9,13 @@
 #include "js_pki_x509.h"
 
 int genToken( const char *pPassword, time_t tTime, char *pToken );
-int makeCert( JDB_CertPolicy *pDBCertPolicy,
-              JDB_PolicyExtList *pDBPolicyExtList,
+int makeCert( JDB_CertProfile *pDBCertProfile,
+              JDB_ProfileExtList *pDBProfileExtList,
               JIssueCertInfo *pIssueCertInfo,
               BIN *pCert );
 
-int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
-             JDB_PolicyExtList  *pDBPolicyExtList,
+int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
+             JDB_ProfileExtList  *pDBProfileExtList,
              JDB_RevokedList    *pDBRevokedList,
              BIN *pCRL );
 

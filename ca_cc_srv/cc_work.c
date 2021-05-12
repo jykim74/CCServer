@@ -275,47 +275,47 @@ int addRevoked( sqlite3 *db, const char *pReq, char **ppRsp )
     return status;
 }
 
-int addCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int addCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
-    int     nPolicyNum = -1;
+    int     nProfileNum = -1;
     JStrList    *pLinkList = NULL;
 
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_PROFILE, &pLinkList );
 
-    if( pLinkList ) nPolicyNum = atoi( pLinkList->pStr );
+    if( pLinkList ) nProfileNum = atoi( pLinkList->pStr );
 
-    if( nPolicyNum >= 0 )
+    if( nProfileNum >= 0 )
     {
-        JCC_PolicyExt   sPolicyExt;
-        memset( &sPolicyExt, 0x00, sizeof(sPolicyExt));
+        JCC_ProfileExt   sProfileExt;
+        memset( &sProfileExt, 0x00, sizeof(sProfileExt));
 
-        ret = JS_CC_decodePolicyExt( pReq, &sPolicyExt );
+        ret = JS_CC_decodeProfileExt( pReq, &sProfileExt );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_WRONG_MSG;
             goto end;
         }
 
-        ret = JS_DB_addCertPolicyExt( db, &sPolicyExt );
-        JS_DB_resetPolicyExt( &sPolicyExt );
+        ret = JS_DB_addCertProfileExt( db, &sProfileExt );
+        JS_DB_resetProfileExt( &sProfileExt );
     }
     else
     {
-        JCC_CertPolicy sCertPolicy;
-        memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+        JCC_CertProfile sCertProfile;
+        memset( &sCertProfile, 0x00, sizeof(sCertProfile));
 
-        ret = JS_CC_decodeCertPolicy( pReq, &sCertPolicy );
+        ret = JS_CC_decodeCertProfile( pReq, &sCertProfile );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_WRONG_MSG;
             goto end;
         }
 
-        JS_DB_addCertPolicy( db, &sCertPolicy );
-        JS_DB_resetCertPolicy( &sCertPolicy );
+        JS_DB_addCertProfile( db, &sCertProfile );
+        JS_DB_resetCertProfile( &sCertProfile );
     }
 
 end :
@@ -327,59 +327,59 @@ end :
     return status;
 }
 
-int addCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int addCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
-    int     nPolicyNum = -1;
+    int     nProfileNum = -1;
     JStrList    *pLinkList = NULL;
 
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_PROFILE, &pLinkList );
 
-    if( pLinkList ) nPolicyNum = atoi( pLinkList->pStr );
+    if( pLinkList ) nProfileNum = atoi( pLinkList->pStr );
 
-    if( nPolicyNum >= 0 )
+    if( nProfileNum >= 0 )
     {
-        JCC_PolicyExt   sPolicyExt;
-        memset( &sPolicyExt, 0x00, sizeof(sPolicyExt));
+        JCC_ProfileExt   sProfileExt;
+        memset( &sProfileExt, 0x00, sizeof(sProfileExt));
 
-        ret = JS_CC_decodePolicyExt( pReq, &sPolicyExt );
+        ret = JS_CC_decodeProfileExt( pReq, &sProfileExt );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_WRONG_MSG;
             goto end;
         }
 
-        ret = JS_DB_addCRLPolicyExt( db, &sPolicyExt );
+        ret = JS_DB_addCRLProfileExt( db, &sProfileExt );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
             goto end;
         }
 
-        JS_DB_resetPolicyExt( &sPolicyExt );
+        JS_DB_resetProfileExt( &sProfileExt );
     }
     else
     {
-        JCC_CRLPolicy sCRLPolicy;
-        memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+        JCC_CRLProfile sCRLProfile;
+        memset( &sCRLProfile, 0x00, sizeof(sCRLProfile));
 
-        ret = JS_CC_decodeCRLPolicy( pReq, &sCRLPolicy );
+        ret = JS_CC_decodeCRLProfile( pReq, &sCRLProfile );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_WRONG_MSG;
             goto end;
         }
 
-        ret = JS_DB_addCRLPolicy( db, &sCRLPolicy );
+        ret = JS_DB_addCRLProfile( db, &sCRLProfile );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
             goto end;
         }
 
-        JS_DB_resetCRLPolicy( &sCRLPolicy );
+        JS_DB_resetCRLProfile( &sCRLProfile );
     }
 
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -391,17 +391,17 @@ end :
     return status;
 }
 
-int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int modCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
-    int     nPolicyNum = -1;
+    int     nProfileNum = -1;
     JStrList    *pLinkList = NULL;
-    JCC_CertPolicy  sCertPolicy;
+    JCC_CertProfile  sCertProfile;
 
-    memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+    memset( &sCertProfile, 0x00, sizeof(sCertProfile));
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_PROFILE, &pLinkList );
 
     if( pLinkList == NULL )
     {
@@ -409,23 +409,23 @@ int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
         goto end;
     }
 
-    nPolicyNum = atoi( pLinkList->pStr );
+    nProfileNum = atoi( pLinkList->pStr );
 
-    ret = JS_CC_decodeCertPolicy( pReq, &sCertPolicy );
+    ret = JS_CC_decodeCertProfile( pReq, &sCertProfile );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_WRONG_MSG;
         goto end;
     }
 
-    ret = JS_DB_modCertPolcy( db, nPolicyNum, &sCertPolicy );
+    ret = JS_DB_modCertPolcy( db, nProfileNum, &sCertProfile );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
 
-    JS_DB_resetCertPolicy( &sCertPolicy );
+    JS_DB_resetCertProfile( &sCertProfile );
 
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
@@ -437,18 +437,18 @@ int modCertPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
     return status;
 }
 
-int modCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
-    int     nPolicyNum = -1;
+    int     nProfileNum = -1;
     JStrList    *pLinkList = NULL;
 
-    JCC_CRLPolicy   sCRLPolicy;
+    JCC_CRLProfile   sCRLProfile;
 
-    memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+    memset( &sCRLProfile, 0x00, sizeof(sCRLProfile));
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_PROFILE, &pLinkList );
 
     if( pLinkList == NULL )
     {
@@ -456,23 +456,23 @@ int modCRLPolicy( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp
         goto end;
     }
 
-    nPolicyNum = atoi( pLinkList->pStr );
+    nProfileNum = atoi( pLinkList->pStr );
 
-    ret = JS_CC_decodeCRLPolicy( pReq, &sCRLPolicy );
+    ret = JS_CC_decodeCRLProfile( pReq, &sCRLProfile );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_WRONG_MSG;
         goto end;
     }
 
-    ret = JS_DB_modCRLPolcy( db, nPolicyNum, &sCRLPolicy );
+    ret = JS_DB_modCRLPolcy( db, nProfileNum, &sCRLProfile );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_BASE;
         goto end;
     }
 
-    JS_DB_resetCRLPolicy( &sCRLPolicy );
+    JS_DB_resetCRLProfile( &sCRLProfile );
 
 end :
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -644,16 +644,16 @@ end :
     return status;
 }
 
-int delCertPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
     JStrList    *pLinkList = NULL;
-    int nPolicyNum = -1;
+    int nProfileNum = -1;
     int bExtOnly = 0;
 
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_PROFILE, &pLinkList );
 
     if( pLinkList == NULL )
     {
@@ -661,7 +661,7 @@ int delCertPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
         goto end;
     }
 
-    nPolicyNum = atoi( pLinkList->pStr );
+    nProfileNum = atoi( pLinkList->pStr );
 
     if( pParamList )
     {
@@ -675,7 +675,7 @@ int delCertPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
 
     if( bExtOnly )
     {
-        ret = JS_DB_delCertPolicyExtsByPolicyNum( db, nPolicyNum );
+        ret = JS_DB_delCertProfileExtsByProfileNum( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
@@ -684,14 +684,14 @@ int delCertPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
     }
     else
     {
-        ret = JS_DB_delCertPolicy( db, nPolicyNum );
+        ret = JS_DB_delCertProfile( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
             goto end;
         }
 
-        ret = JS_DB_delCertPolicyExtsByPolicyNum( db, nPolicyNum );
+        ret = JS_DB_delCertProfileExtsByProfileNum( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
@@ -706,15 +706,15 @@ end :
     return status;
 }
 
-int delCRLPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
     JStrList    *pLinkList = NULL;
-    int nPolicyNum = -1;
+    int nProfileNum = -1;
     int bExtOnly = 0;
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pLinkList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_PROFILE, &pLinkList );
 
     if( pLinkList == NULL )
     {
@@ -722,7 +722,7 @@ int delCRLPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList
         goto end;
     }
 
-    nPolicyNum = atoi( pLinkList->pStr );
+    nProfileNum = atoi( pLinkList->pStr );
 
     if( pParamList )
     {
@@ -736,7 +736,7 @@ int delCRLPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList
 
     if( bExtOnly )
     {
-        ret = JS_DB_delCRLPolicyExtsByPolicyNum( db, nPolicyNum );
+        ret = JS_DB_delCRLProfileExtsByProfileNum( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
@@ -745,14 +745,14 @@ int delCRLPolicy( sqlite3 *db, const char *pPath, const JNameValList *pParamList
     }
     else
     {
-        ret = JS_DB_delCRLPolicy( db, nPolicyNum );
+        ret = JS_DB_delCRLProfile( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
             goto end;
         }
 
-        ret = JS_DB_delCRLPolicyExtsByPolicyNum( db, nPolicyNum );
+        ret = JS_DB_delCRLProfileExtsByProfileNum( db, nProfileNum );
         if( ret != 0 )
         {
             ret = JS_CC_ERROR_SYSTEM;
@@ -843,9 +843,9 @@ int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
         num = JS_DB_getNum( db, "TB_REVOKED" );
     else if( strcasecmp( pInfoList->pStr, "cert_policies" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CERT_POLICY" );
+        num = JS_DB_getNum( db, "TB_CERT_PROFILE" );
     else if( strcasecmp( pInfoList->pStr, "crl_policies" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CRL_POLICY" );
+        num = JS_DB_getNum( db, "TB_CRL_PROFILE" );
     else
     {
         fprintf( stderr, "invalid link(%s)\n", pInfoList->pStr );
@@ -881,21 +881,21 @@ int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamL
     int     status = JS_HTTP_STATUS_OK;
     JStrList    *pInfoList = NULL;
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_POLICY, &pInfoList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CERT_PROFILE, &pInfoList );
 
     if( pInfoList == NULL )
     {
-        JCC_CertPolicyList *pCertPolicyList = NULL;
+        JCC_CertProfileList *pCertProfileList = NULL;
 
-        ret = JS_DB_getCertPolicyList( db, &pCertPolicyList );
+        ret = JS_DB_getCertProfileList( db, &pCertProfileList );
         if( ret < 1 )
         {
             ret = JS_CC_ERROR_NO_DATA;
             goto end;
         }
 
-        JS_CC_encodeCertPolicyList( pCertPolicyList, ppRsp );
-        if( pCertPolicyList ) JS_DB_resetCertPolicyList( &pCertPolicyList );
+        JS_CC_encodeCertProfileList( pCertProfileList, ppRsp );
+        if( pCertProfileList ) JS_DB_resetCertProfileList( &pCertProfileList );
     }
     else
     {
@@ -903,8 +903,8 @@ int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamL
 
         if( nInfoCnt == 1 )
         {
-            JCC_CertPolicy sCertPolicy;
-            memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+            JCC_CertProfile sCertProfile;
+            memset( &sCertProfile, 0x00, sizeof(sCertProfile));
 
             int nNum = atoi( pInfoList->pStr );
             if( nNum < 0 )
@@ -913,33 +913,33 @@ int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamL
                 goto end;
             }
 
-            ret = JS_DB_getCertPolicy( db, nNum, &sCertPolicy );
+            ret = JS_DB_getCertProfile( db, nNum, &sCertProfile );
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
                 goto end;
             }
 
-            JS_CC_encodeCertPolicy( &sCertPolicy, ppRsp );
-            JS_DB_resetCertPolicy( &sCertPolicy );
+            JS_CC_encodeCertProfile( &sCertProfile, ppRsp );
+            JS_DB_resetCertProfile( &sCertProfile );
         }
         else if( nInfoCnt == 2 )
         {
-            int nPolicyNum = atoi( pInfoList->pStr );
+            int nProfileNum = atoi( pInfoList->pStr );
 
             if( strcasecmp( pInfoList->pNext->pStr, "extensions" ) == 0 )
             {
-               JCC_PolicyExtList *pPolicyExtList = NULL;
+               JCC_ProfileExtList *pProfileExtList = NULL;
 
-               ret = JS_DB_getCertPolicyExtList( db, nPolicyNum, &pPolicyExtList );
+               ret = JS_DB_getCertProfileExtList( db, nProfileNum, &pProfileExtList );
                if( ret < 1 )
                {
                    ret = JS_CC_ERROR_NO_DATA;
                    goto end;
                }
 
-               JS_CC_encodePolicyExtList( pPolicyExtList, ppRsp );
-               if( pPolicyExtList ) JS_DB_resetPolicyExtList( &pPolicyExtList );
+               JS_CC_encodeProfileExtList( pProfileExtList, ppRsp );
+               if( pProfileExtList ) JS_DB_resetProfileExtList( &pProfileExtList );
             }
         }
     }
@@ -964,21 +964,21 @@ int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
     int     status = JS_HTTP_STATUS_OK;
     JStrList    *pInfoList = NULL;
 
-    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_POLICY, &pInfoList );
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CRL_PROFILE, &pInfoList );
 
     if( pInfoList == NULL )
     {
-        JCC_CRLPolicyList *pCRLPolicyList = NULL;
+        JCC_CRLProfileList *pCRLProfileList = NULL;
 
-        ret = JS_DB_getCRLPolicyList( db, &pCRLPolicyList );
+        ret = JS_DB_getCRLProfileList( db, &pCRLProfileList );
         if( ret < 1 )
         {
             ret = JS_CC_ERROR_NO_DATA;
             goto end;
         }
 
-        JS_CC_encodeCRLPolicyList( pCRLPolicyList, ppRsp );
-        if( pCRLPolicyList ) JS_DB_resetCRLPolicyList( &pCRLPolicyList );
+        JS_CC_encodeCRLProfileList( pCRLProfileList, ppRsp );
+        if( pCRLProfileList ) JS_DB_resetCRLProfileList( &pCRLProfileList );
     }
     else
     {
@@ -986,8 +986,8 @@ int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
 
         if( nInfoCnt == 1 )
         {
-            JCC_CRLPolicy sCRLPolicy;
-            memset( &sCRLPolicy, 0x00, sizeof(sCRLPolicy));
+            JCC_CRLProfile sCRLProfile;
+            memset( &sCRLProfile, 0x00, sizeof(sCRLProfile));
 
             int nNum = atoi( pInfoList->pStr );
             if( nNum < 0 )
@@ -996,33 +996,33 @@ int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
                 goto end;
             }
 
-            ret = JS_DB_getCRLPolicy( db, nNum, &sCRLPolicy );
+            ret = JS_DB_getCRLProfile( db, nNum, &sCRLProfile );
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
                 goto end;
             }
 
-            JS_CC_encodeCRLPolicy( &sCRLPolicy, ppRsp );
-            JS_DB_resetCRLPolicy( &sCRLPolicy );
+            JS_CC_encodeCRLProfile( &sCRLProfile, ppRsp );
+            JS_DB_resetCRLProfile( &sCRLProfile );
         }
         else if( nInfoCnt == 2 )
         {
-            int nPolicyNum = atoi( pInfoList->pStr );
+            int nProfileNum = atoi( pInfoList->pStr );
 
             if( strcasecmp( pInfoList->pNext->pStr, "extensions" ) == 0 )
             {
-               JCC_PolicyExtList *pPolicyExtList = NULL;
+               JCC_ProfileExtList *pProfileExtList = NULL;
 
-               ret = JS_DB_getCRLPolicyExtList( db, nPolicyNum, &pPolicyExtList );
+               ret = JS_DB_getCRLProfileExtList( db, nProfileNum, &pProfileExtList );
                if( ret < 1 )
                {
                    ret = JS_CC_ERROR_NO_DATA;
                    goto end;
                }
 
-               JS_CC_encodePolicyExtList( pPolicyExtList, ppRsp );
-               if( pPolicyExtList ) JS_DB_resetPolicyExtList( &pPolicyExtList );
+               JS_CC_encodeProfileExtList( pProfileExtList, ppRsp );
+               if( pProfileExtList ) JS_DB_resetProfileExtList( &pProfileExtList );
             }
         }
     }
@@ -1316,14 +1316,14 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 {
     int ret = 0;
     int status = JS_HTTP_STATUS_OK;
-    int nPolicyNum = -1;
+    int nProfileNum = -1;
     int nUserNum = -1;
 
     JCC_IssueCertReq    sIssueCertReq;
     JCC_IssueCertRsp    sIssueCertRsp;
-    JDB_CertPolicy      sCertPolicy;
-    JDB_PolicyExtList   *pPolicyExtList = NULL;
-    JDB_PolicyExtList   *pCurPolicyExtList = NULL;
+    JDB_CertProfile      sCertProfile;
+    JDB_ProfileExtList   *pProfileExtList = NULL;
+    JDB_ProfileExtList   *pCurProfileExtList = NULL;
     JDB_User            sUser;
     JIssueCertInfo      sIssueCertInfo;
     JCertInfo           sCertInfo;
@@ -1350,7 +1350,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     memset( &sIssueCertReq, 0x00, sizeof(sIssueCertReq));
     memset( &sIssueCertRsp, 0x00, sizeof(sIssueCertRsp));
-    memset( &sCertPolicy, 0x00, sizeof(sCertPolicy));
+    memset( &sCertProfile, 0x00, sizeof(sCertProfile));
     memset( &sUser, 0x00, sizeof(sUser));
     memset( &sIssueCertInfo, 0x00, sizeof(sIssueCertInfo));
     memset( &sReqInfo, 0x00, sizeof(sReqInfo));
@@ -1382,16 +1382,16 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         JS_DB_setUser( &sUser, -1, now_t, sIssueCertReq.pName, sIssueCertReq.pSSN, sIssueCertReq.pEmail, 0, NULL, NULL );
     }
 
-    nPolicyNum = sIssueCertReq.nCertPolicyNum;
+    nProfileNum = sIssueCertReq.nCertProfileNum;
 
-    ret = JS_DB_getCertPolicy( db, nPolicyNum, &sCertPolicy );
+    ret = JS_DB_getCertProfile( db, nProfileNum, &sCertProfile );
     if( ret != 1 )
     {
         ret = JS_CC_ERROR_NO_DATA;
         goto end;
     }
 
-    JS_DB_getCertPolicyExtList( db, nPolicyNum, &pPolicyExtList );
+    JS_DB_getCertProfileExtList( db, nProfileNum, &pProfileExtList );
 
     JS_BIN_decodeHex( sIssueCertReq.pCSR, &binCSR );
     ret = JS_PKI_getReqInfo( &binCSR, &sReqInfo, NULL );
@@ -1406,39 +1406,39 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 	JS_PKI_getPublicKeyValue( &binPub, &binPubVal );
     JS_PKI_getKeyIdentifier( &binPubVal, sKeyID );
 
-    if( sCertPolicy.nNotBefore <= 0 )
+    if( sCertProfile.nNotBefore <= 0 )
     {
         uNotBefore = 0;
-        uNotAfter = sCertPolicy.nNotAfter * 60 * 60 * 24;
+        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24;
     }
     else
     {
-        uNotBefore = sCertPolicy.nNotBefore - now_t;
-        uNotAfter = sCertPolicy.nNotAfter - now_t;
+        uNotBefore = sCertProfile.nNotBefore - now_t;
+        uNotAfter = sCertProfile.nNotAfter - now_t;
     }
 
     int nSeq = JS_DB_getSeq( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
 
-    if( strcasecmp( sCertPolicy.pDNTemplate, "#CSR") == 0 )
+    if( strcasecmp( sCertProfile.pDNTemplate, "#CSR") == 0 )
     {
         pRealDN = JS_strdup( sReqInfo.pSubjectDN );
     }
     else
     {
-        _getReplaceValue( sCertPolicy.pDNTemplate, &sUser, &pRealDN );
+        _getReplaceValue( sCertProfile.pDNTemplate, &sUser, &pRealDN );
     }
 
-    pCurPolicyExtList = pPolicyExtList;
+    pCurProfileExtList = pProfileExtList;
 
-    while( pCurPolicyExtList )
+    while( pCurProfileExtList )
     {
         JExtensionInfo sExtInfo;
 
         memset( &sExtInfo,0x00, sizeof(sExtInfo));
 
 
-        if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameSKI ) == 0 )
+        if( strcasecmp( pCurProfileExtList->sProfileExt.pSN, JS_PKI_ExtNameSKI ) == 0 )
         {
             BIN binPub = {0,0};
             char    sHexID[128];
@@ -1447,16 +1447,16 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
             JS_BIN_decodeHex(sReqInfo.pPublicKey, &binPub);
             JS_PKI_getKeyIdentifier( &binPub, sHexID );
 
-            if( pCurPolicyExtList->sPolicyExt.pValue )
+            if( pCurProfileExtList->sProfileExt.pValue )
             {
-                JS_free( pCurPolicyExtList->sPolicyExt.pValue );
-                pCurPolicyExtList->sPolicyExt.pValue = NULL;
+                JS_free( pCurProfileExtList->sProfileExt.pValue );
+                pCurProfileExtList->sProfileExt.pValue = NULL;
             }
 
-            pCurPolicyExtList->sPolicyExt.pValue = JS_strdup( sHexID );
+            pCurProfileExtList->sProfileExt.pValue = JS_strdup( sHexID );
             JS_BIN_reset( &binPub );
         }
-        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
+        else if( strcasecmp( pCurProfileExtList->sProfileExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
         {
             char    sHexID[128];
             char    sHexSerial[128];
@@ -1471,52 +1471,52 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
             JS_PKI_getAuthorityKeyIdentifier( &g_binCert, sHexID, sHexSerial, sHexIssuer );
             sprintf( sBuf, "KEYID$%s#ISSUER$%s#SERIAL$%s", sHexID, sHexIssuer, sHexSerial );
-            if( pCurPolicyExtList->sPolicyExt.pValue )
+            if( pCurProfileExtList->sProfileExt.pValue )
             {
-                JS_free( pCurPolicyExtList->sPolicyExt.pValue );
-                pCurPolicyExtList->sPolicyExt.pValue = NULL;
+                JS_free( pCurProfileExtList->sProfileExt.pValue );
+                pCurProfileExtList->sProfileExt.pValue = NULL;
             }
 
-            pCurPolicyExtList->sPolicyExt.pValue = JS_strdup( sBuf );
+            pCurProfileExtList->sProfileExt.pValue = JS_strdup( sBuf );
         }
-        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameCRLDP) == 0 )
+        else if( strcasecmp( pCurProfileExtList->sProfileExt.pSN, JS_PKI_ExtNameCRLDP) == 0 )
         {
             char *pDP = NULL;
-            JS_PKI_getDP( pCurPolicyExtList->sPolicyExt.pValue, nSeq, &pDP );
+            JS_PKI_getDP( pCurProfileExtList->sProfileExt.pValue, nSeq, &pDP );
             if( pDP )
             {
-                if( pCurPolicyExtList->sPolicyExt.pValue ) JS_free( pCurPolicyExtList->sPolicyExt.pValue );
-                pCurPolicyExtList->sPolicyExt.pValue = pDP;
+                if( pCurProfileExtList->sProfileExt.pValue ) JS_free( pCurProfileExtList->sProfileExt.pValue );
+                pCurProfileExtList->sProfileExt.pValue = pDP;
             }
         }
-        else if( strcasecmp( pCurPolicyExtList->sPolicyExt.pSN, JS_PKI_ExtNameSAN ) == 0 )
+        else if( strcasecmp( pCurProfileExtList->sProfileExt.pSN, JS_PKI_ExtNameSAN ) == 0 )
         {
             char *pReplaced = NULL;
-            _getReplaceValue( pCurPolicyExtList->sPolicyExt.pValue, &sUser, &pReplaced );
+            _getReplaceValue( pCurProfileExtList->sProfileExt.pValue, &sUser, &pReplaced );
 
             if( pReplaced )
             {
-                if( pCurPolicyExtList->sPolicyExt.pValue )
-                    JS_free( pCurPolicyExtList->sPolicyExt.pValue );
+                if( pCurProfileExtList->sProfileExt.pValue )
+                    JS_free( pCurProfileExtList->sProfileExt.pValue );
 
-                pCurPolicyExtList->sPolicyExt.pValue = pReplaced;
+                pCurProfileExtList->sProfileExt.pValue = pReplaced;
             }
         }
 
-        pCurPolicyExtList = pCurPolicyExtList->pNext;
+        pCurProfileExtList = pCurProfileExtList->pNext;
     }
 
     JS_PKI_setIssueCertInfo( &sIssueCertInfo,
-                             sCertPolicy.nVersion,
+                             sCertProfile.nVersion,
                              sSerial,
-                             sCertPolicy.pHash,
+                             sCertProfile.pHash,
                              pRealDN,
                              uNotBefore,
                              uNotAfter,
                              sReqInfo.nKeyAlg,
                              sReqInfo.pPublicKey );
 
-    ret = makeCert( &sCertPolicy, pPolicyExtList, &sIssueCertInfo, &binCert );
+    ret = makeCert( &sCertProfile, pProfileExtList, &sIssueCertInfo, &binCert );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -1580,8 +1580,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 end:
     JS_CC_resetIssueCertReq( &sIssueCertReq );
     JS_CC_resetIssueCertRsp( &sIssueCertRsp );
-    JS_DB_resetCertPolicy( &sCertPolicy );
-    if( pPolicyExtList ) JS_DB_resetPolicyExtList( &pPolicyExtList );
+    JS_DB_resetCertProfile( &sCertProfile );
+    if( pProfileExtList ) JS_DB_resetProfileExtList( &pProfileExtList );
     JS_DB_resetUser( &sUser );
     JS_PKI_resetReqInfo( &sReqInfo );
     JS_PKI_resetIssueCertInfo( &sIssueCertInfo );
@@ -1614,9 +1614,9 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     JCC_IssueCRLReq     sCRLReq;
     JCC_IssueCRLRsp     sCRLRsp;
 
-    JDB_CRLPolicy       sDBPolicy;
-    JDB_PolicyExtList   *pDBPolicyExtList = NULL;
-    JDB_PolicyExtList   *pDBCurExtList = NULL;
+    JDB_CRLProfile       sDBProfile;
+    JDB_ProfileExtList   *pDBProfileExtList = NULL;
+    JDB_ProfileExtList   *pDBCurExtList = NULL;
     JDB_RevokedList     *pDBRevokedList = NULL;
     JDB_CRL             sDBCRL;
 
@@ -1627,7 +1627,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
 
     memset( &sCRLReq, 0x00, sizeof(sCRLReq));
     memset( &sCRLRsp, 0x00, sizeof(sCRLRsp));
-    memset( &sDBPolicy, 0x00, sizeof(sDBPolicy));
+    memset( &sDBProfile, 0x00, sizeof(sDBProfile));
     memset( &sCRLInfo, 0x00, sizeof(sCRLInfo));
     memset( &sDBCRL, 0x00, sizeof(sDBCRL));
 
@@ -1638,27 +1638,27 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    ret = JS_DB_getCRLPolicy( db, sCRLReq.nCRLPolicyNum, &sDBPolicy );
+    ret = JS_DB_getCRLProfile( db, sCRLReq.nCRLProfileNum, &sDBProfile );
     if( ret != 1 )
     {
         ret = JS_CC_ERROR_NO_DATA;
         goto end;
     }
 
-    ret = JS_DB_getCRLPolicyExtList( db, sCRLReq.nCRLPolicyNum, &pDBPolicyExtList );
+    ret = JS_DB_getCRLProfileExtList( db, sCRLReq.nCRLProfileNum, &pDBProfileExtList );
     if( ret < 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
 
-    pDBCurExtList = pDBPolicyExtList;
+    pDBCurExtList = pDBProfileExtList;
     int nSeq = JS_DB_getSeq( db, "TB_CRL" );
     nSeq++;
 
     while( pDBCurExtList )
     {
-        if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
+        if( strcasecmp( pDBCurExtList->sProfileExt.pSN, JS_PKI_ExtNameAKI ) == 0 )
         {
             BIN binCert = {0,0};
             char        sHexID[256];
@@ -1679,22 +1679,22 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
 
             pValue = (char *)JS_malloc( len + 128 );
             sprintf( pValue, "KEYID$%s#ISSUER$%s#SERIAL$%s", sHexID, sHexIssuer, sHexSerial );
-            if( pDBCurExtList->sPolicyExt.pValue )
+            if( pDBCurExtList->sProfileExt.pValue )
             {
-                JS_free( pDBCurExtList->sPolicyExt.pValue );
+                JS_free( pDBCurExtList->sProfileExt.pValue );
             }
 
-            pDBCurExtList->sPolicyExt.pValue = pValue;
+            pDBCurExtList->sProfileExt.pValue = pValue;
         }
-        else if( strcasecmp( pDBCurExtList->sPolicyExt.pSN, JS_PKI_ExtNameCRLNum ) == 0 )
+        else if( strcasecmp( pDBCurExtList->sProfileExt.pSN, JS_PKI_ExtNameCRLNum ) == 0 )
         {
-            if( strcasecmp( pDBCurExtList->sPolicyExt.pValue, "auto") == 0 )
+            if( strcasecmp( pDBCurExtList->sProfileExt.pValue, "auto") == 0 )
             {
                 char *pValue = NULL;
                 pValue = (char *)JS_malloc( 32 );
                 sprintf( pValue, "%04x", nSeq );
-                JS_free( pDBCurExtList->sPolicyExt.pValue );
-                pDBCurExtList->sPolicyExt.pValue = pValue;
+                JS_free( pDBCurExtList->sProfileExt.pValue );
+                pDBCurExtList->sProfileExt.pValue = pValue;
             }
         }
 
@@ -1709,7 +1709,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    ret = makeCRL( &sDBPolicy, pDBPolicyExtList, pDBRevokedList, &binCRL );
+    ret = makeCRL( &sDBProfile, pDBProfileExtList, pDBRevokedList, &binCRL );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -1748,14 +1748,14 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
 end :
     JS_CC_resetIssueCRLReq( &sCRLReq );
     JS_CC_resetIssueCRLRsp( &sCRLRsp );
-    JS_DB_resetCRLPolicy( &sDBPolicy );
+    JS_DB_resetCRLProfile( &sDBProfile );
     JS_PKI_resetCRLInfo( &sCRLInfo );
     if( pHexCRL ) JS_free( pHexCRL );
     JS_DB_resetCRL( &sDBCRL );
 
     JS_BIN_reset( &binCRL );
 
-    if( pDBPolicyExtList ) JS_DB_resetPolicyExtList( &pDBPolicyExtList );
+    if( pDBProfileExtList ) JS_DB_resetProfileExtList( &pDBProfileExtList );
     if( pDBRevokedList ) JS_DB_resetRevokedList( &pDBRevokedList );
 
     if( ret != 0 )

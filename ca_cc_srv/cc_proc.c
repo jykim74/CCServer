@@ -27,11 +27,11 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getNum( db, pPath, pParamList, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
         ret = getCertPolicies( db, pPath, pParamList, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_PROFILE, strlen(JS_CC_PATH_CRL_PROFILE)) == 0 )
     {
         ret = getCRLPolicies( db, pPath, pParamList, ppRsp );
     }
@@ -82,13 +82,13 @@ int runPost( sqlite3 *db, const char *pPath, const JNameValList *pParamList, con
     {
         ret = regUser( db, pReq, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
-        ret = addCertPolicy( db, pPath, pReq, ppRsp );
+        ret = addCertProfile( db, pPath, pReq, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_PROFILE, strlen(JS_CC_PATH_CRL_PROFILE)) == 0 )
     {
-        ret = addCRLPolicy( db, pPath, pReq, ppRsp );
+        ret = addCRLProfile( db, pPath, pReq, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen( JS_CC_PATH_REVOKED)) == 0 )
     {
@@ -114,10 +114,10 @@ int runPut( sqlite3 *db, const char *pPath, const JNameValList *pParamList, cons
 {
     int ret = 0;
 
-    if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
-        ret = modCertPolicy( db, pPath, pReq, ppRsp );
-    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY)) == 0 )
-        ret = modCRLPolicy( db, pPath, pReq, ppRsp );
+    if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
+        ret = modCertProfile( db, pPath, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_PROFILE, strlen(JS_CC_PATH_CRL_PROFILE)) == 0 )
+        ret = modCRLProfile( db, pPath, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
         ret = addSigner( db, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_LDAP, strlen(JS_CC_PATH_LDAP)) == 0 )
@@ -139,13 +139,13 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     {
         ret = delSigner( db, pPath, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CERT_POLICY, strlen(JS_CC_PATH_CERT_POLICY)) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
-        ret = delCertPolicy( db, pPath, pParamList, ppRsp );
+        ret = delCertProfile( db, pPath, pParamList, ppRsp );
     }
-    else if( strncasecmp( pPath, JS_CC_PATH_CRL_POLICY, strlen(JS_CC_PATH_CRL_POLICY )) == 0 )
+    else if( strncasecmp( pPath, JS_CC_PATH_CRL_PROFILE, strlen(JS_CC_PATH_CRL_PROFILE )) == 0 )
     {
-        ret = delCRLPolicy( db, pPath, pParamList, ppRsp );
+        ret = delCRLProfile( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen(JS_CC_PATH_REVOKED)) == 0 )
     {

@@ -46,18 +46,18 @@ end :
     return ret;
 }
 
-int makeCert( JDB_CertPolicy *pDBCertPolicy,
-              JDB_PolicyExtList *pDBPolicyExtList,
+int makeCert( JDB_CertProfile *pDBCertProfile,
+              JDB_ProfileExtList *pDBProfileExtList,
               JIssueCertInfo *pIssueCertInfo,
               BIN *pCert )
 {
     int ret = 0;
 
     JExtensionInfoList  *pExtInfoList = NULL;
-    JDB_PolicyExtList   *pDBCurList = NULL;
-    int nExtCnt = JS_DB_countPolicyExtList( pDBPolicyExtList );
+    JDB_ProfileExtList   *pDBCurList = NULL;
+    int nExtCnt = JS_DB_countProfileExtList( pDBProfileExtList );
 
-    pDBCurList = pDBPolicyExtList;
+    pDBCurList = pDBProfileExtList;
 
     while( pDBCurList )
     {
@@ -65,7 +65,7 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
 
         memset( &sExtInfo,0x00, sizeof(sExtInfo));
 
-        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBCurList->sPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBCurList->sProfileExt );
 
         if( pExtInfoList == NULL )
             JS_PKI_createExtensionInfoList( &sExtInfo, &pExtInfoList );
@@ -83,8 +83,8 @@ int makeCert( JDB_CertPolicy *pDBCertPolicy,
     return ret;
 }
 
-int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
-             JDB_PolicyExtList  *pDBPolicyExtList,
+int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
+             JDB_ProfileExtList  *pDBProfileExtList,
              JDB_RevokedList    *pDBRevokedList,
              BIN *pCRL )
 {
@@ -99,32 +99,32 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
 
     memset( &sIssueCRLInfo, 0x00, sizeof(sIssueCRLInfo));
 
-    if( pDBCRLPolicy->nLastUpdate <= 0 )
+    if( pDBCRLProfile->nLastUpdate <= 0 )
     {
         uLastUpdate = 0;
-        uNextUpdate = pDBCRLPolicy->nNextUpdate * 60 * 60 * 24;
+        uNextUpdate = pDBCRLProfile->nNextUpdate * 60 * 60 * 24;
     }
     else
     {
         time_t now_t = time(NULL);
-        uLastUpdate = pDBCRLPolicy->nLastUpdate - now_t;
-        uNextUpdate = pDBCRLPolicy->nNextUpdate - now_t;
+        uLastUpdate = pDBCRLProfile->nLastUpdate - now_t;
+        uNextUpdate = pDBCRLProfile->nNextUpdate - now_t;
     }
 
-    while( pDBPolicyExtList )
+    while( pDBProfileExtList )
     {
         JExtensionInfo  sExtInfo;
 
         memset( &sExtInfo, 0x00, sizeof(sExtInfo));
 
-        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBPolicyExtList->sPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtInfo, &pDBProfileExtList->sProfileExt );
 
         if( pExtInfoList == NULL )
             JS_PKI_createExtensionInfoList( &sExtInfo, &pExtInfoList );
         else
             JS_PKI_appendExtensionInfoList( pExtInfoList, &sExtInfo );
 
-        pDBPolicyExtList = pDBPolicyExtList->pNext;
+        pDBProfileExtList = pDBProfileExtList->pNext;
         JS_PKI_resetExtensionInfo( &sExtInfo );
     }
 
@@ -132,23 +132,23 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
     {
         JRevokeInfo     sRevokeInfo;
         JExtensionInfo  sExtReason;
-        JDB_PolicyExt   sDBPolicyExt;
+        JDB_ProfileExt   sDBProfileExt;
 
         char        sReason[64];
 
         memset( &sRevokeInfo, 0x00, sizeof(sRevokeInfo));
         memset( &sExtReason, 0x00, sizeof(sExtReason));
-        memset( &sDBPolicyExt, 0x00, sizeof(sDBPolicyExt));
+        memset( &sDBProfileExt, 0x00, sizeof(sDBProfileExt));
 
         sprintf( sReason, "%d", pDBRevokedList->sRevoked.nReason );
-        JS_DB_setPolicyExt( &sDBPolicyExt,
+        JS_DB_setProfileExt( &sDBProfileExt,
                             -1,
-                            pDBCRLPolicy->nNum,
+                            pDBCRLProfile->nNum,
                             1,
                             JS_PKI_ExtNameCRLReason,
                             sReason );
 
-        JS_PKI_transExtensionFromDBRec( &sExtReason, &sDBPolicyExt );
+        JS_PKI_transExtensionFromDBRec( &sExtReason, &sDBProfileExt );
 
         JS_PKI_setRevokeInfo( &sRevokeInfo,
                               pDBRevokedList->sRevoked.pSerial,
@@ -162,14 +162,14 @@ int makeCRL( JDB_CRLPolicy  *pDBCRLPolicy,
 
         JS_PKI_resetRevokeInfo( &sRevokeInfo );
         JS_PKI_resetExtensionInfo( &sExtReason );
-        JS_DB_resetPolicyExt( &sDBPolicyExt );
+        JS_DB_resetProfileExt( &sDBProfileExt );
 
         pDBRevokedList = pDBRevokedList->pNext;
     }
 
     JS_PKI_setIssueCRLInfo( &sIssueCRLInfo,
                             nVersion,
-                            pDBCRLPolicy->pHash,
+                            pDBCRLProfile->pHash,
                             uLastUpdate,
                             uNextUpdate );
 
