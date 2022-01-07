@@ -425,11 +425,10 @@ int modCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppR
         goto end;
     }
 
+end :
     JS_DB_resetCertProfile( &sCertProfile );
-
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
- end:
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
@@ -472,9 +471,9 @@ int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
         goto end;
     }
 
+end :
     JS_DB_resetCRLProfile( &sCRLProfile );
 
-end :
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
@@ -640,6 +639,7 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp )
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
 
     return status;
 }
@@ -702,6 +702,7 @@ int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
     return status;
 }
@@ -763,11 +764,12 @@ int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
     return status;
 }
 
-int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int getCount( sqlite3 *db, const char *pPath, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -785,20 +787,7 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
         goto end;
     }
 
-    if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
-        count = JS_DB_getCount( db, "TB_USER" );
-    else if( strcasecmp( pInfoList->pStr, "certs" ) == 0 )
-        count = JS_DB_getCount( db, "TB_CERT" );
-    else if( strcasecmp( pInfoList->pStr, "crls" ) == 0 )
-        count = JS_DB_getCount( db, "TB_CRL" );
-    else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
-        count = JS_DB_getCount( db, "TB_REVOKED" );
-    else if( strcasecmp( pInfoList->pStr, "kms" ) == 0 )
-        count = JS_DB_getCount( db, "TB_KMS" );
-    else if( strcasecmp( pInfoList->pStr, "tsp" ) == 0 )
-        count = JS_DB_getCount( db, "TB_TSP" );
-    else if( strcasecmp( pInfoList->pStr, "audit" ) == 0 )
-        count = JS_DB_getCount( db, "TB_AUDIT" );
+    count = JS_DB_getCount( db, JS_DB_getTableName( pInfoList->pStr ));
 
     if( count < 0 )
     {
@@ -813,6 +802,8 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
     JS_CC_resetNameVal( &sNameVal );
 
 end :
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -822,7 +813,7 @@ end :
     return status;
 }
 
-int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int getNum( sqlite3 *db, const char *pPath, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -840,24 +831,7 @@ int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
         goto end;
     }
 
-    if( strcasecmp( pInfoList->pStr, "users" ) == 0 )
-        num = JS_DB_getNum( db, "TB_USER" );
-    else if( strcasecmp( pInfoList->pStr, "certs" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CERT" );
-    else if( strcasecmp( pInfoList->pStr, "crls" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CRL" );
-    else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
-        num = JS_DB_getNum( db, "TB_REVOKED" );
-    else if( strcasecmp( pInfoList->pStr, "cert_policies" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CERT_PROFILE" );
-    else if( strcasecmp( pInfoList->pStr, "crl_policies" ) == 0 )
-        num = JS_DB_getNum( db, "TB_CRL_PROFILE" );
-    else
-    {
-        fprintf( stderr, "invalid link(%s)\n", pInfoList->pStr );
-        ret = JS_CC_ERROR_WRONG_LINK;
-        goto end;
-    }
+    num = JS_DB_getNum( db, JS_DB_getTableName( pInfoList->pStr ));
 
     if( num < 0 )
     {
@@ -872,12 +846,66 @@ int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     JS_CC_resetNameVal( &sNameVal );
 
 end :
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
+    return status;
+}
+
+int getName( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+    JCC_NameVal sNameVal;
+    char *pName = NULL;
+    char sColName[128];
+    char sTableName[128];
+    int nNum = 0;
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_NAME, &pInfoList );
+    if( pInfoList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    if( JS_UTIL_countStrList( pInfoList ) < 3 )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    sprintf( sTableName, "%s", JS_DB_getTableName( pInfoList->pStr ) );
+    sprintf( sColName, "%s", pInfoList->pNext->pStr );
+    nNum = atoi( pInfoList->pNext->pNext->pStr );
+
+    ret = JS_DB_getName( db, sColName, nNum, sTableName, &pName );
+    if( ret < 1 )
+    {
+        ret = JS_CC_ERROR_NO_DATA;
+        goto end;
+    }
+
+    JS_CC_setNameVal( &sNameVal, "name", pName );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+    JS_CC_resetNameVal( &sNameVal );
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    if( pName ) JS_free( pName );
     return status;
 }
 
@@ -1814,6 +1842,11 @@ int publishLDAP( sqlite3 *db, const char *pPath, const JNameValList *pParamList,
         goto end;
     }
 
+    if( g_pLDAP == NULL )
+    {
+        return JS_HTTP_STATUS_METHOD_NOT_ALLOWED;
+    }
+
     if( strcasecmp( pCmd, "publish" ) == 0 )
     {
         int nNum = -1;
@@ -2190,6 +2223,8 @@ int getStatistics( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
     JS_CC_resetNameVal( &sNameVal );
 
 end :
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;

@@ -19,8 +19,9 @@ int modCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppR
 int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int getAdmins( sqlite3 *db, const char *pPath, char **ppRsp );
 int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
-int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
-int getNum( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getCount( sqlite3 *db, const char *pPath, char **ppRsp );
+int getNum( sqlite3 *db, const char *pPath, char **ppRsp );
+int getName( sqlite3 *db, const char *pPath, char **ppRsp );
 int delUser( sqlite3 *db, const char *pPath, char **ppRsp );
 int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
@@ -40,5 +41,6 @@ int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
 int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getStatistics( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+
 
 #endif

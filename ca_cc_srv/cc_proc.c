@@ -21,11 +21,15 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     }
     else if( strncasecmp( pPath, JS_CC_PATH_COUNT, strlen(JS_CC_PATH_COUNT)) == 0 )
     {
-        ret = getCount( db, pPath, pParamList, ppRsp );
+        ret = getCount( db, pPath, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_NUM)) == 0 )
     {
-        ret = getNum( db, pPath, pParamList, ppRsp );
+        ret = getNum( db, pPath, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_NAME, strlen(JS_CC_PATH_NAME)) == 0 )
+    {
+        ret = getName( db, pPath, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
