@@ -63,6 +63,22 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getCertStatus( db, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_KMS, strlen(JS_CC_PATH_KMS)) == 0 )
+    {
+        ret = getKMS( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_TSP, strlen(JS_CC_PATH_TSP)) == 0 )
+    {
+        ret = getTSP( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_AUDIT, strlen(JS_CC_PATH_AUDIT)) == 0 )
+    {
+        ret = getAudit( db, pPath, pParamList, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_STATISTICS, strlen(JS_CC_PATH_STATISTICS)) == 0 )
+    {
+        ret = getStatistics( db, pPath, pParamList, ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;

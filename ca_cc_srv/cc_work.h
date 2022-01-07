@@ -36,5 +36,9 @@ int getCA( char **ppRsp );
 int publishLDAP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getCRDPs( sqlite3 *db, char **ppRsp );
 int getCertStatus( sqlite3 *db, const JNameValList *pParamList, char **ppRsp );
+int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getStatistics( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 
 #endif

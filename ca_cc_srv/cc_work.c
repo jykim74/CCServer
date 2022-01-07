@@ -793,6 +793,12 @@ int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
         count = JS_DB_getCount( db, "TB_CRL" );
     else if( strcasecmp( pInfoList->pStr, "revokeds" ) == 0 )
         count = JS_DB_getCount( db, "TB_REVOKED" );
+    else if( strcasecmp( pInfoList->pStr, "kms" ) == 0 )
+        count = JS_DB_getCount( db, "TB_KMS" );
+    else if( strcasecmp( pInfoList->pStr, "tsp" ) == 0 )
+        count = JS_DB_getCount( db, "TB_TSP" );
+    else if( strcasecmp( pInfoList->pStr, "audit" ) == 0 )
+        count = JS_DB_getCount( db, "TB_AUDIT" );
 
     if( count < 0 )
     {
@@ -1999,5 +2005,263 @@ end :
     }
 
 
+    return status;
+}
+
+int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JStrList *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_KMS, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_KMSList *pKMSList = NULL;
+
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getKMSPageList( db, nOffset, nLimit, &pKMSList );
+            if( ret < 1 )
+            {
+                ret = JS_CC_ERROR_NO_DATA;
+                goto end;
+            }
+        }
+
+        JS_CC_encodeKMSList( pKMSList, ppRsp );
+        if( pKMSList ) JS_DB_resetKMSList( &pKMSList );
+    }
+    else
+    {
+        JDB_KMS sKMS;
+        memset( &sKMS, 0x00, sizeof(sKMS));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getKMS( db, nSeq, &sKMS );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeKMS( &sKMS, ppRsp );
+        JS_DB_resetKMS( &sKMS );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return status;
+}
+
+int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JStrList *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_TSP, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_TSPList *pTSPList = NULL;
+
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getTSPPageList( db, nOffset, nLimit, &pTSPList );
+            if( ret < 1 )
+            {
+                ret = JS_CC_ERROR_NO_DATA;
+                goto end;
+            }
+        }
+
+        JS_CC_encodeTSPList( pTSPList, ppRsp );
+        if( pTSPList ) JS_DB_resetTSPList( &pTSPList );
+    }
+    else
+    {
+        JDB_TSP sTSP;
+        memset( &sTSP, 0x00, sizeof(sTSP));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getTSP( db, nSeq, &sTSP );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeTSP( &sTSP, ppRsp );
+        JS_DB_resetTSP( &sTSP );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return status;
+}
+
+int getStatistics( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+    JCC_NameVal sNameVal;
+    int count = 0;
+    int start = -1;
+    int end = -1;
+    char* pTable = NULL;
+    char sValue[32];
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+    memset( sValue, 0x00, sizeof(sValue));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_STATISTICS, &pInfoList );
+    if( pInfoList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    int len = strlen( pInfoList->pStr );
+    pTable = (char *)JS_calloc( len + 1, 1);
+    sprintf( pTable, "%s", pInfoList->pStr );
+
+    if( pParamList )
+    {
+        const char *pValue = NULL;
+
+        pValue = JS_UTIL_valueFromNameValList( pParamList, "start" );
+        if( pValue ) start = atoi( pValue );
+
+        pValue = JS_UTIL_valueFromNameValList( pParamList, "end" );
+        if( pValue ) end = atoi( pValue );
+    }
+
+    count = JS_DB_getStatisticsCount( db, start, end, pTable );
+
+    if( count < 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+    sprintf( sValue, "%d", count );
+
+    JS_CC_setNameVal( &sNameVal, "count", sValue );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+    JS_CC_resetNameVal( &sNameVal );
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pTable ) JS_free( pTable );
+
+    return status;
+}
+
+int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JStrList *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_AUDIT, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_AuditList *pAuditList = NULL;
+
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            ret = JS_DB_getAuditPageList( db, nOffset, nLimit, &pAuditList );
+            if( ret < 1 )
+            {
+                ret = JS_CC_ERROR_NO_DATA;
+                goto end;
+            }
+        }
+
+        JS_CC_encodeAuditList( pAuditList, ppRsp );
+        if( pAuditList ) JS_DB_resetAuditList( &pAuditList );
+    }
+    else
+    {
+        JDB_Audit sAudit;
+        memset( &sAudit, 0x00, sizeof(sAudit));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getAudit( db, nSeq, &sAudit );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeAudit( &sAudit, ppRsp );
+        JS_DB_resetAudit( &sAudit );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     return status;
 }
