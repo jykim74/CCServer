@@ -877,15 +877,15 @@ int getName( sqlite3 *db, const char *pPath, char **ppRsp )
         goto end;
     }
 
-    if( JS_UTIL_countStrList( pInfoList ) < 3 )
+    if( JS_UTIL_countStrList( pInfoList ) < 2 )
     {
         ret = JS_CC_ERROR_WRONG_LINK;
         goto end;
     }
 
     sprintf( sTableName, "%s", JS_DB_getTableName( pInfoList->pStr ) );
-    sprintf( sColName, "%s", pInfoList->pNext->pStr );
-    nNum = atoi( pInfoList->pNext->pNext->pStr );
+    sprintf( sColName, "%s", JS_DB_getIndexColumn( sTableName ) );
+    nNum = atoi( pInfoList->pNext->pStr );
 
     ret = JS_DB_getName( db, sColName, nNum, sTableName, &pName );
     if( ret < 1 )
@@ -906,6 +906,54 @@ end :
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     if( pName ) JS_free( pName );
+    return status;
+}
+
+int getDN( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+    JCC_NameVal sNameVal;
+    char *pDN = NULL;
+    int nCertNum = 0;
+
+    memset( &sNameVal, 0x00, sizeof(sNameVal));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_DN, &pInfoList );
+    if( pInfoList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    if( JS_UTIL_countStrList( pInfoList ) < 1 )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    nCertNum = atoi( pInfoList->pStr );
+
+    ret = JS_DB_getCertDN( db, nCertNum, &pDN );
+    if( ret < 1 )
+    {
+        ret = JS_CC_ERROR_NO_DATA;
+        goto end;
+    }
+
+    JS_CC_setNameVal( &sNameVal, "dn", pDN );
+    JS_CC_encodeNameVal( &sNameVal, ppRsp );
+    JS_CC_resetNameVal( &sNameVal );
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    if( pDN ) JS_free( pDN );
     return status;
 }
 

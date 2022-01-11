@@ -22,6 +22,7 @@ int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
 int getCount( sqlite3 *db, const char *pPath, char **ppRsp );
 int getNum( sqlite3 *db, const char *pPath, char **ppRsp );
 int getName( sqlite3 *db, const char *pPath, char **ppRsp );
+int getDN( sqlite3 *db, const char *pPath, char **ppRsp );
 int delUser( sqlite3 *db, const char *pPath, char **ppRsp );
 int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
