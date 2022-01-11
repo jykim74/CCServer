@@ -21,7 +21,7 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     }
     else if( strncasecmp( pPath, JS_CC_PATH_COUNT, strlen(JS_CC_PATH_COUNT)) == 0 )
     {
-        ret = getCount( db, pPath, ppRsp );
+        ret = getCount( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_NUM, strlen(JS_CC_PATH_NUM)) == 0 )
     {

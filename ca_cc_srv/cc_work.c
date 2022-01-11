@@ -550,6 +550,8 @@ int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -557,7 +559,17 @@ int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getUserPageList( db, nOffset, nLimit, &pUserList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getUserPageList( db, nOffset, nLimit, &pUserList );
+            else
+                ret = JS_DB_searchUserPageList( db, pTarget, pWord, nOffset, nLimit, &pUserList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -769,7 +781,7 @@ end :
     return status;
 }
 
-int getCount( sqlite3 *db, const char *pPath, char **ppRsp )
+int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -787,7 +799,24 @@ int getCount( sqlite3 *db, const char *pPath, char **ppRsp )
         goto end;
     }
 
-    count = JS_DB_getCount( db, JS_DB_getTableName( pInfoList->pStr ));
+    if( pParamList )
+    {
+        const char *pValue = NULL;
+        const char *pTarget = NULL;
+        const char *pWord = NULL;
+
+        pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+        if( pValue ) pTarget = pValue;
+
+        pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+        if( pValue ) pWord = pValue;
+
+        count = JS_DB_searchCount( db, pTarget, pWord, JS_DB_getTableName( pInfoList->pStr ) );
+    }
+    else
+    {
+        count = JS_DB_getCount( db, JS_DB_getTableName( pInfoList->pStr ));
+    }
 
     if( count < 0 )
     {
@@ -1200,6 +1229,8 @@ int getCerts( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -1207,7 +1238,17 @@ int getCerts( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getCertPageList( db, nOffset, nLimit, &pCertList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pWord == NULL || pTarget == NULL )
+                ret = JS_DB_getCertPageList( db, nOffset, nLimit, &pCertList );
+            else
+                ret = JS_DB_searchCertPageList( db, pTarget, pWord, nOffset, nLimit, &pCertList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -1264,6 +1305,8 @@ int getCRLs( sqlite3 *db, const char *pPath, const JNameValList *pParamList, cha
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -1271,7 +1314,18 @@ int getCRLs( sqlite3 *db, const char *pPath, const JNameValList *pParamList, cha
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getCRLPageList( db, nOffset, nLimit, &pCRLList );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getCRLPageList( db, nOffset, nLimit, &pCRLList );
+            else
+                ret = JS_DB_searchCRLPageList( db, pTarget, pWord, nOffset, nLimit, &pCRLList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -1328,6 +1382,8 @@ int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList,
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -1335,7 +1391,17 @@ int getRevokeds( sqlite3 *db, const char *pPath, const JNameValList *pParamList,
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getRevokedPageList( db, nOffset, nLimit, &pRevokedList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getRevokedPageList( db, nOffset, nLimit, &pRevokedList );
+            else
+                ret = JS_DB_searchRevokedPageList( db, pTarget, pWord, nOffset, nLimit, &pRevokedList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -2106,6 +2172,8 @@ int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -2113,7 +2181,17 @@ int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getKMSPageList( db, nOffset, nLimit, &pKMSList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getKMSPageList( db, nOffset, nLimit, &pKMSList );
+            else
+                ret = JS_DB_searchKMSPageList( db, pTarget, pWord, nOffset, nLimit, &pKMSList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -2171,6 +2249,8 @@ int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -2178,7 +2258,17 @@ int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getTSPPageList( db, nOffset, nLimit, &pTSPList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getTSPPageList( db, nOffset, nLimit, &pTSPList );
+            else
+                ret = JS_DB_searchTSPPageList( db, pTarget, pWord, nOffset, nLimit, &pTSPList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
@@ -2301,6 +2391,8 @@ int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             const char *pValue = NULL;
             int nOffset = 0;
             int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
 
             pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
             if( pValue ) nOffset = atoi( pValue );
@@ -2308,7 +2400,17 @@ int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, ch
             pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
             if( pValue ) nLimit = atoi( pValue );
 
-            ret = JS_DB_getAuditPageList( db, nOffset, nLimit, &pAuditList );
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getAuditPageList( db, nOffset, nLimit, &pAuditList );
+            else
+                ret = JS_DB_searchAuditPageList( db, pTarget, pWord, nOffset, nLimit, &pAuditList );
+
             if( ret < 1 )
             {
                 ret = JS_CC_ERROR_NO_DATA;
