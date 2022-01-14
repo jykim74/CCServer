@@ -10,6 +10,9 @@
 int authWork( sqlite3 *db, const char *pReq, char **ppRsp );
 int regUser( sqlite3 *db, const char *pReq, char **ppRsp );
 int addSigner( sqlite3 *db, const char *pReq, char **ppRsp );
+int addAdmin( sqlite3 *db, const char *pReq, char **ppRsp );
+int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
+int delAdmin( sqlite3 *db, const char *pPath, char **ppRsp );
 int addRevoked( sqlite3 *db, const char *pReq, char **ppRsp );
 int delSigner( sqlite3 *db, const char *pPath, char **ppRsp );
 int delRevoked( sqlite3 *db, const char *pPath, char **ppRsp );
