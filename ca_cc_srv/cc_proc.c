@@ -106,6 +106,10 @@ int runPost( sqlite3 *db, const char *pPath, const JNameValList *pParamList, con
     {
         ret = regUser( db, pReq, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
+    {
+        ret = addAdmin( db, pReq, ppRsp );
+    }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
         ret = addCertProfile( db, pPath, pReq, ppRsp );
@@ -166,6 +170,10 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
     {
         ret = delUser( db, pPath, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
+    {
+        ret = delAdmin( db, pPath, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
     {
