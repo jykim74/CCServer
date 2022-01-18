@@ -21,7 +21,8 @@ int addCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
 int modCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int getAdmins( sqlite3 *db, const char *pPath, char **ppRsp );
-int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int getUser( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int modUser( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
 int getCount( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getNum( sqlite3 *db, const char *pPath, char **ppRsp );
 int getName( sqlite3 *db, const char *pPath, char **ppRsp );

@@ -621,7 +621,7 @@ end :
     return status;
 }
 
-int getUsers( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int getUser( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -703,6 +703,51 @@ end :
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return status;
+}
+
+int modUser( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    int     nSeq = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_User  sUser;
+
+    memset( &sUser, 0x00, sizeof(sUser));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_USER, &pLinkList );
+
+    if( pLinkList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    nSeq = atoi( pLinkList->pStr );
+
+    ret = JS_CC_decodeUser( pReq, &sUser );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_WRONG_MSG;
+        goto end;
+    }
+
+    ret = JS_DB_modUser( db, nSeq, &sUser );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+end :
+    JS_DB_resetUser( &sUser );
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
 
     return status;
 }

@@ -13,7 +13,7 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     int ret = 0;
     if( strncasecmp( pPath, JS_CC_PATH_USER, strlen(JS_CC_PATH_USER)) == 0 )
     {
-        ret = getUsers( db, pPath, pParamList, ppRsp );
+        ret = getUser( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
     {
@@ -158,6 +158,8 @@ int runPut( sqlite3 *db, const char *pPath, const JNameValList *pParamList, cons
         ret = publishLDAP( db, pPath, pParamList, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
         ret = modAdmin( db, pPath, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_USER, strlen( JS_CC_PATH_USER)) == 0 )
+        ret = modUser( db, pPath, pReq, ppRsp );
     else
         ret = JS_HTTP_STATUS_NOT_FOUND;
 
