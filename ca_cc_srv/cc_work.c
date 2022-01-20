@@ -1058,6 +1058,9 @@ int getName( sqlite3 *db, const char *pPath, char **ppRsp )
     JS_CC_setNameVal( &sNameVal, "name", pName );
     JS_CC_encodeNameVal( &sNameVal, ppRsp );
     JS_CC_resetNameVal( &sNameVal );
+
+    ret = 0;
+
 end :
     if( ret != 0 )
     {
@@ -1106,6 +1109,8 @@ int getDN( sqlite3 *db, const char *pPath, char **ppRsp )
     JS_CC_setNameVal( &sNameVal, "dn", pDN );
     JS_CC_encodeNameVal( &sNameVal, ppRsp );
     JS_CC_resetNameVal( &sNameVal );
+    ret = 0;
+
 end :
     if( ret != 0 )
     {
