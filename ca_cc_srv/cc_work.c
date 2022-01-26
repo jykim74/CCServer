@@ -7,10 +7,12 @@
 #include "js_util.h"
 #include "js_http.h"
 #include "js_cfg.h"
+#include "js_gen.h"
 
 #include "cc_tools.h"
 #include "js_ldap.h"
 #include "js_pki_tools.h"
+
 
 extern  JEnvList    *g_pEnvList;
 extern  BIN         g_binCert;
@@ -94,6 +96,7 @@ end :
     {
         JS_CC_setAuthRsp( &sAuthRsp, sToken, "" );
         JS_CC_encodeAuthRsp( &sAuthRsp, ppRsp );
+        JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_LOGIN, NULL );
     }
     else
     {
@@ -170,6 +173,7 @@ end :
     {
         JS_CC_setRegUserRsp( &sRegUserRsp, sRefNum, pRand );
         JS_CC_encodeRegUserRsp( &sRegUserRsp, ppRsp );
+        JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_REG_USER, NULL );
     }
     else
     {
@@ -1861,6 +1865,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     }
 
     ret = 0;
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_GEN_CERT, NULL );
 
 end:
     JS_CC_resetIssueCertReq( &sIssueCertReq );
@@ -2029,6 +2034,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     if( g_pLDAP ) JS_LDAP_publishData( g_pLDAP, sCRLInfo.pIssuerName, JS_LDAP_TYPE_CERTIFICATE_REVOCATION_LIST, &binCRL );
 
     ret = 0;
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_GEN_CRL, NULL );
 
 end :
     JS_CC_resetIssueCRLReq( &sCRLReq );
