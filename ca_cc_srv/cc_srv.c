@@ -28,6 +28,8 @@ JEnvList        *g_pEnvList = NULL;
 char            *g_pDBPath = NULL;
 static char     g_sConfPath[1024];
 int             g_bVerbose = 0;
+int             g_nPort = 9050;
+int             g_nSSLPort = 9150;
 
 LDAP            *g_pLDAP = NULL;
 
@@ -278,6 +280,12 @@ int serverInit()
 
     g_pDBPath = value;
 
+    value = JS_CFG_getValue( g_pEnvList, "CC_PORT" );
+    if( value ) g_nPort = atoi( value );
+
+    value = JS_CFG_getValue( g_pEnvList, "CC_SSL_PORT" );
+    if( value ) g_nSSLPort = atoi( value );
+
     value = JS_CFG_getValue( g_pEnvList, "LDAP_USE" );
     if( value && strcasecmp( value, "YES" ) == 0 )
     {
@@ -343,7 +351,7 @@ int serverInit()
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
 
-    printf( "CC_Server Init OK\n" );
+    printf( "CC_Server Init OK [Port:%d SSL:%d]\n", g_nPort, g_nSSLPort );
 
     return 0;
 }
@@ -358,15 +366,9 @@ void printUsage()
 
 }
 
-void test()
-{
-    char* tmp = malloc( 100 );
-}
 
 int main( int argc, char *argv[] )
 {
-    int     nRet = 0;
-    int     nStatus = 0;
     int     nOpt = 0;
 
     sprintf( g_sConfPath, "%s", "../ca_cc_srv.cfg" );
@@ -394,11 +396,10 @@ int main( int argc, char *argv[] )
     }
 
     serverInit();
-    test();
 
     JS_THD_logInit( "./log", "cc", 2 );
-    JS_THD_registerService( "JS_CC", NULL, 9050, 4, NULL, CC_Service );
-    JS_THD_registerService( "JS_CC_SSL", NULL, 9150, 4, NULL, CC_SSL_Service );
+    JS_THD_registerService( "JS_CC", NULL, g_nPort, 4, NULL, CC_Service );
+    JS_THD_registerService( "JS_CC_SSL", NULL, g_nSSLPort, 4, NULL, CC_SSL_Service );
     JS_THD_serviceStartAll();
 
     return 0;
