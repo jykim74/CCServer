@@ -44,8 +44,6 @@ int authWork( sqlite3 *db, const char *pReq, char **ppRsp )
     JCC_AuthReq sAuthReq;
     JCC_AuthRsp sAuthRsp;
 
-    char        sResCode[5];
-    char        sResMsg[256];
     char        sToken[128];
 
     memset( &sAdmin, 0x00, sizeof(sAdmin));
