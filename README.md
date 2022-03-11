@@ -1,3 +1,3 @@
 # Command Center Server
 
-Command Center Server for Admin.
+Command Center Server for CA Admin.
