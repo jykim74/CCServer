@@ -2591,3 +2591,143 @@ end :
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
     return status;
 }
+
+int addConfig( sqlite3 *db, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+
+    JCC_Config  sConfig;
+    memset( &sConfig, 0x00, sizeof(sConfig));
+
+    JS_CC_decodeConfig( pReq, &sConfig );
+    if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
+
+    ret = JS_DB_addConfig( db, &sConfig );
+    JS_DB_resetConfig( &sConfig );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    return status;
+}
+
+int getConfigs( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CONFIG, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_ConfigList *pConfigList = NULL;
+
+        ret = JS_DB_getConfigList( db, &pConfigList );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeConfigList( pConfigList, ppRsp );
+        if( pConfigList ) JS_DB_resetConfigList( &pConfigList );
+    }
+    else
+    {
+        JDB_Config sConfig;
+        memset( &sConfig, 0x00, sizeof(sConfig));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getConfig( db, nSeq, &sConfig );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeConfig( &sConfig, ppRsp );
+        JS_DB_resetConfig( &sConfig );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return status;
+}
+
+int modConfig( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    int     nSeq = -1;
+    JStrList    *pLinkList = NULL;
+    JCC_Config  sConfig;
+
+    memset( &sConfig, 0x00, sizeof(sConfig));
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CONFIG, &pLinkList );
+
+    if( pLinkList == NULL )
+    {
+        ret = JS_CC_ERROR_WRONG_LINK;
+        goto end;
+    }
+
+    nSeq = atoi( pLinkList->pStr );
+
+    ret = JS_CC_decodeConfig( pReq, &sConfig );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_WRONG_MSG;
+        goto end;
+    }
+
+    ret = JS_DB_modConfig( db, nSeq, &sConfig );
+    if( ret != 0 )
+    {
+        ret = JS_CC_ERROR_SYSTEM;
+        goto end;
+    }
+
+end :
+    JS_DB_resetConfig( &sConfig );
+    if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+
+    return status;
+}
+
+int delConfig( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_CONFIG, &pInfoList );
+
+    if( pInfoList == NULL ) return JS_CC_ERROR_WRONG_LINK;
+
+    int nNum = atoi( pInfoList->pStr );
+
+    ret = JS_DB_delConfig( db, nNum );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return status;
+}

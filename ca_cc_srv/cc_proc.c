@@ -87,6 +87,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getStatistics( db, pPath, pParamList, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CONFIG, strlen(JS_CC_PATH_CONFIG)) == 0 )
+    {
+        ret = getConfigs( db, pPath, ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;
@@ -126,6 +130,10 @@ int runPost( sqlite3 *db, const char *pPath, const JNameValList *pParamList, con
     {
         ret = addAdmin( db, pReq, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_CONFIG, strlen(JS_CC_PATH_CONFIG)) == 0 )
+    {
+        ret = addConfig( db, pReq, ppRsp );
+    }
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen( JS_CC_PATH_REVOKED)) == 0 )
     {
         ret = addRevoked( db, pReq, ppRsp );
@@ -158,6 +166,8 @@ int runPut( sqlite3 *db, const char *pPath, const JNameValList *pParamList, cons
         ret = publishLDAP( db, pPath, pParamList, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
         ret = modAdmin( db, pPath, pReq, ppRsp );
+    else if( strncasecmp( pPath, JS_CC_PATH_CONFIG, strlen(JS_CC_PATH_CONFIG)) == 0 )
+        ret = modConfig( db, pPath, pReq, ppRsp );
     else if( strncasecmp( pPath, JS_CC_PATH_USER, strlen( JS_CC_PATH_USER)) == 0 )
         ret = modUser( db, pPath, pReq, ppRsp );
     else
@@ -184,6 +194,10 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     else if( strncasecmp( pPath, JS_CC_PATH_ADMIN, strlen(JS_CC_PATH_ADMIN)) == 0 )
     {
         ret = delAdmin( db, pPath, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_CONFIG, strlen(JS_CC_PATH_CONFIG)) == 0 )
+    {
+        ret = delConfig( db, pPath, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {

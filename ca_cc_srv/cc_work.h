@@ -46,6 +46,10 @@ int getKMS( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
 int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getStatistics( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
 int getAudit( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp );
+int addConfig( sqlite3 *db, const char *pReq, char **ppRsp );
+int getConfigs( sqlite3 *db, const char *pPath, char **ppRsp );
+int modConfig( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp );
+int delConfig( sqlite3 *db, const char *pPath, char **ppRsp );
 
 
 #endif
