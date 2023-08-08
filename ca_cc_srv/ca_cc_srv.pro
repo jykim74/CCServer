@@ -23,7 +23,7 @@ mac {
     INCLUDEPATH += "/usr/local/include"
     LIBS += -L"/usr/local/lib" -lltdl
 
-    LIBS += -L"../../build-PKILib-Desktop_Qt_5_11_3_clang_64bit-Debug" -lPKILib
+    LIBS += -L"../../build-PKILib-Desktop_Qt_5_15_2_clang_64bit-Debug" -lPKILib
     LIBS += -L"../../PKILib/lib/mac/debug/openssl3/lib" -lcrypto -lssl
     LIBS += -L"/usr/local/lib" -lltdl
     LIBS += -lldap -llber

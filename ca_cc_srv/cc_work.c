@@ -132,7 +132,8 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
     ret = JS_CC_decodeRegUserReq( pReq, &sRegUserReq );
     if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
 
-    nRefNum = JS_DB_getSeq( db, "TB_USER" );
+//    nRefNum = JS_DB_getSeq( db, "TB_USER" );
+    nRefNum = JS_DB_getLastVal( db, "TB_USER" );
     if( nRefNum < 0 )
     {
         ret = JS_CC_ERROR_BASE;
@@ -553,7 +554,7 @@ int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
         goto end;
     }
 
-    ret = JS_DB_modCRLPolcy( db, nProfileNum, &sCRLProfile );
+    ret = JS_DB_modCRLProfile( db, nProfileNum, &sCRLProfile );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_BASE;
@@ -1704,7 +1705,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
         uNotAfter = sCertProfile.nNotAfter - now_t;
     }
 
-    int nSeq = JS_DB_getSeq( db, "TB_CERT" );
+//    int nSeq = JS_DB_getSeq( db, "TB_CERT" );
+    int nSeq = JS_DB_getNextVal( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
 
     if( strcasecmp( sCertProfile.pDNTemplate, "#CSR") == 0 )
@@ -1815,7 +1817,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
     if( nUserNum < 0 )
     {
-        nUserNum = JS_DB_getSeq( db, "TB_USER" );
+//        nUserNum = JS_DB_getSeq( db, "TB_USER" );
+        nUserNum = JS_DB_getLastVal( db, "TB_USER" );
         sUser.nNum = nUserNum;
 
         ret = JS_DB_addUser( db, &sUser );
@@ -1831,7 +1834,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     if( pHexCRLDP ) JS_PKI_getExtensionStringValue( pHexCRLDP, JS_PKI_ExtNameCRLDP, &pCRLDP );
 
     JS_DB_setCert( &sCert,
-                   -1,
+                   nSeq,
                    now_t,
                    -1,
                    sUser.nNum,
@@ -1941,8 +1944,10 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
     }
 
     pDBCurExtList = pDBProfileExtList;
-    int nSeq = JS_DB_getSeq( db, "TB_CRL" );
-    nSeq++;
+//    int nSeq = JS_DB_getSeq( db, "TB_CRL" );
+//    nSeq++;
+
+    int nSeq = JS_DB_getLastVal( db, "TB_CRL" );
 
     while( pDBCurExtList )
     {
