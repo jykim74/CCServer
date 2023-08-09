@@ -12,6 +12,7 @@
 #include "cc_tools.h"
 #include "js_ldap.h"
 #include "js_pki_tools.h"
+#include "js_license.h"
 
 
 extern  JEnvList    *g_pEnvList;
@@ -300,6 +301,8 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
 {
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
+    BIN     binLCN = {0,0};
+    char    *pHexLCN = NULL;
 
     JCC_LCN  sLCN;
     memset( &sLCN, 0x00, sizeof(sLCN));
@@ -307,11 +310,60 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_CC_decodeLCN( pReq, &sLCN );
     if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
 
+    if( sLCN.nStatus == 1 )
+    {
+        char sKey[128];
+        JS_LICENSE_INFO sLCNInfo;
+
+        memset( &sLCNInfo, 0x00, sizeof(sLCNInfo));
+        memset( sKey, 0x00, sizeof(sKey));
+
+        if( sLCN.pSID )
+            strcpy( sLCNInfo.sSID, sLCN.pSID );
+        if( sLCN.pUser )
+            strcpy( sLCNInfo.sUser, sLCN.pUser );
+        if( sLCN.pProductName )
+            strcpy( sLCNInfo.sProduct, sLCN.pProductName );
+
+        if( sLCN.pExtension )
+            strcpy( sLCNInfo.sExt, sLCN.pExtension );
+
+        sLCNInfo.nQTY = sLCN.nQuantity;
+        strcpy( sLCNInfo.sIssued, sLCN.pIssueDate );
+        strcpy( sLCNInfo.sExpire, sLCN.pExpireDate );
+
+        JS_License_DeriveKey( sKey, &sLCNInfo );
+
+        strcpy( sLCNInfo.sKey, sKey );
+
+        if( sLCN.pKey )
+        {
+            JS_free( sLCN.pKey );
+            sLCN.pKey = NULL;
+        }
+
+        sLCN.pKey = JS_strdup( sKey );
+
+        JS_BIN_set( &binLCN, (unsigned char *)&sLCNInfo, sizeof(sLCNInfo));
+        JS_BIN_encodeHex( &binLCN, &pHexLCN );
+
+        if( sLCN.pLicense )
+        {
+            JS_free( sLCN.pLicense );
+            sLCN.pLicense = NULL;
+        }
+
+        sLCN.pLicense = pHexLCN;
+    }
+
     ret = JS_DB_addLCN( db, &sLCN );
+end :
     JS_DB_resetLCN( &sLCN );
 
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    JS_BIN_reset( &binLCN );
 
     return status;
 }
@@ -2542,7 +2594,7 @@ int getLCN( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
         }
 
         JS_CC_encodeLCNList( pLCNList, ppRsp );
-        if( pLCNList ) JS_DB_resetTSPList( &pLCNList );
+        if( pLCNList ) JS_DB_resetLCNList( &pLCNList );
     }
     else
     {
