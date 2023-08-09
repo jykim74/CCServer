@@ -91,6 +91,10 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     {
         ret = getConfigs( db, pPath, ppRsp );
     }
+    else if( strncasecmp( pPath, JS_CC_PATH_LICENSE, strlen(JS_CC_PATH_LICENSE)) == 0 )
+    {
+        ret = getLCN( db, pPath, pParamList, ppRsp );
+    }
     else
     {
         ret = JS_HTTP_STATUS_NOT_FOUND;
@@ -145,6 +149,10 @@ int runPost( sqlite3 *db, const char *pPath, const JNameValList *pParamList, con
     else if( strncasecmp( pPath, JS_CC_PATH_ISSUE_CRL, strlen( JS_CC_PATH_ISSUE_CRL)) == 0 )
     {
         ret = issueCRL( db, pReq, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_LICENSE, strlen( JS_CC_PATH_LICENSE)) == 0 )
+    {
+        ret = addLCN( db, pReq, ppRsp );
     }
     else
     {
@@ -210,6 +218,10 @@ int runDelete( sqlite3 *db, const char *pPath, const JNameValList *pParamList, c
     else if( strncasecmp( pPath, JS_CC_PATH_REVOKED, strlen(JS_CC_PATH_REVOKED)) == 0 )
     {
         ret = delRevoked( db, pPath, ppRsp );
+    }
+    else if( strncasecmp( pPath, JS_CC_PATH_LICENSE, strlen(JS_CC_PATH_LICENSE)) == 0 )
+    {
+        ret = delLCN( db, pPath, ppRsp );
     }
     else
     {

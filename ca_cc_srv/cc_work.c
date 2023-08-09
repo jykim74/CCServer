@@ -296,6 +296,48 @@ int delAdmin( sqlite3 *db, const char *pPath, char **ppRsp )
     return status;
 }
 
+int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
+{
+    int     ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+
+    JCC_LCN  sLCN;
+    memset( &sLCN, 0x00, sizeof(sLCN));
+
+    JS_CC_decodeLCN( pReq, &sLCN );
+    if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
+
+    ret = JS_DB_addLCN( db, &sLCN );
+    JS_DB_resetLCN( &sLCN );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    return status;
+}
+
+int delLCN( sqlite3 *db, const char *pPath, char **ppRsp )
+{
+    int ret = 0;
+    int     status = JS_HTTP_STATUS_OK;
+    JStrList    *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_LICENSE, &pInfoList );
+
+    if( pInfoList == NULL ) return JS_CC_ERROR_WRONG_LINK;
+
+    int nNum = atoi( pInfoList->pStr );
+
+    ret = JS_DB_delLCN( db, nNum );
+
+    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    return status;
+}
+
 int delSigner( sqlite3 *db, const char *pPath, char **ppRsp )
 {
     int ret = 0;
@@ -2440,6 +2482,83 @@ int getTSP( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
 
         JS_CC_encodeTSP( &sTSP, ppRsp );
         JS_DB_resetTSP( &sTSP );
+    }
+
+    ret = 0;
+
+end :
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+    }
+
+    if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+    return status;
+}
+
+int getLCN( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+{
+    int ret = 0;
+    int status = JS_HTTP_STATUS_OK;
+    JStrList *pInfoList = NULL;
+
+    JS_HTTP_getPathRestInfo( pPath, JS_CC_PATH_LICENSE, &pInfoList );
+
+    if( pInfoList == NULL )
+    {
+        JDB_LCNList *pLCNList = NULL;
+
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nOffset = 0;
+            int nLimit = 0;
+            const char *pTarget = NULL;
+            const char *pWord = NULL;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "offset" );
+            if( pValue ) nOffset = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "limit" );
+            if( pValue ) nLimit = atoi( pValue );
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "target" );
+            if( pValue ) pTarget = pValue;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "word" );
+            if( pValue ) pWord = pValue;
+
+            if( pTarget == NULL || pWord == NULL )
+                ret = JS_DB_getLCNPageList( db, nOffset, nLimit, &pLCNList );
+            else
+                ret = JS_DB_searchLCNPageList( db, pTarget, pWord, nOffset, nLimit, &pLCNList );
+
+            if( ret < 1 )
+            {
+                ret = JS_CC_ERROR_NO_DATA;
+                goto end;
+            }
+        }
+
+        JS_CC_encodeLCNList( pLCNList, ppRsp );
+        if( pLCNList ) JS_DB_resetTSPList( &pLCNList );
+    }
+    else
+    {
+        JDB_LCN sLCN;
+        memset( &sLCN, 0x00, sizeof(sLCN));
+        int nSeq = atoi( pInfoList->pStr );
+
+        ret = JS_DB_getLCN( db, nSeq, &sLCN );
+        if( ret < 1 )
+        {
+            ret = JS_CC_ERROR_NO_DATA;
+            goto end;
+        }
+
+        JS_CC_encodeLCN( &sLCN, ppRsp );
+        JS_DB_resetLCN( &sLCN );
     }
 
     ret = 0;
