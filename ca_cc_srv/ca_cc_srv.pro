@@ -7,8 +7,7 @@ SOURCES += \
         cc_proc.c \
         cc_srv.c \
         cc_tools.c \
-        cc_work.c \
-        main.c
+        cc_work.c
 
 HEADERS += \
     cc_proc.h \

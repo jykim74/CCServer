@@ -332,7 +332,7 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
         strcpy( sLCNInfo.sIssued, sLCN.pIssueDate );
         strcpy( sLCNInfo.sExpire, sLCN.pExpireDate );
 
-        JS_License_DeriveKey( sKey, &sLCNInfo );
+        JS_LCN_DeriveKey( sKey, &sLCNInfo );
 
         strcpy( sLCNInfo.sKey, sKey );
 
