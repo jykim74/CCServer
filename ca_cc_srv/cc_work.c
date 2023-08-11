@@ -318,19 +318,18 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
         memset( &sLCNInfo, 0x00, sizeof(sLCNInfo));
         memset( sKey, 0x00, sizeof(sKey));
 
-        if( sLCN.pSID )
-            strcpy( sLCNInfo.sSID, sLCN.pSID );
-        if( sLCN.pUser )
-            strcpy( sLCNInfo.sUser, sLCN.pUser );
-        if( sLCN.pProductName )
-            strcpy( sLCNInfo.sProduct, sLCN.pProductName );
-
-        if( sLCN.pExtension )
-            strcpy( sLCNInfo.sExt, sLCN.pExtension );
-
-        sLCNInfo.nQTY = sLCN.nQuantity;
-        strcpy( sLCNInfo.sIssued, sLCN.pIssueDate );
-        strcpy( sLCNInfo.sExpire, sLCN.pExpireDate );
+        JS_LCN_setInfo( &sLCNInfo,
+                        JS_LCN_VERSION,
+                        sLCN.nType,
+                        sLCN.nQTY,
+                        sLCN.pSID,
+                        sLCN.pUser,
+                        sLCN.pProduct,
+                        sLCN.pIssued,
+                        sLCN.pExpire,
+                        sLCN.pRef,
+                        sLCN.pExt,
+                        NULL );
 
         JS_LCN_DeriveKey( sKey, &sLCNInfo );
 
