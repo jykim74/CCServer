@@ -297,26 +297,7 @@ int delAdmin( sqlite3 *db, const char *pPath, char **ppRsp )
     return status;
 }
 
-int _getDateTime( time_t tTime, char *pDateTime )
-{
-    if( tTime < 0 ) return -1;
-    if( pDateTime == NULL ) return -1;
 
-    struct tm *pstTime = localtime( &tTime );
-//    struct tm *pstTime = gmtime( &tTime );
-
-    if( pstTime == NULL ) return -2;
-
-    sprintf( pDateTime, "%04d%02d%02d %02d%02d%02d",
-             pstTime->tm_year + 1900,
-             pstTime->tm_mon + 1,
-             pstTime->tm_mday,
-             pstTime->tm_hour,
-             pstTime->tm_min,
-             pstTime->tm_sec );
-
-    return 0;
-}
 
 int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
 {
@@ -341,14 +322,14 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
 
         if( sLCN.pIssued )
         {
-            if( strcasecmp( sLCN.pIssued, "#Start" ) == 0 )
+            if( strcasecmp( sLCN.pIssued, "#START" ) == 0 )
             {
                 int nDays = atoi( sLCN.pExpire );
                 time_t tStart = time(NULL);
                 time_t tExpire = tStart * 86400 * nDays;
 
-                _getDateTime( tStart, sLCN.pIssued );
-                _getDateTime( tExpire, sLCN.pExpire );
+                JS_LCN_getDateTime( tStart, sLCN.pIssued );
+                JS_LCN_getDateTime( tExpire, sLCN.pExpire );
             }
         }
 
