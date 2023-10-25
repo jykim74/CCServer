@@ -99,7 +99,7 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
 
     memset( &sIssueCRLInfo, 0x00, sizeof(sIssueCRLInfo));
 
-    if( pDBCRLProfile->nLastUpdate <= 0 )
+    if( pDBCRLProfile->nThisUpdate <= 0 )
     {
         uLastUpdate = 0;
         uNextUpdate = pDBCRLProfile->nNextUpdate * 60 * 60 * 24;
@@ -107,7 +107,7 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
     else
     {
         time_t now_t = time(NULL);
-        uLastUpdate = pDBCRLProfile->nLastUpdate - now_t;
+        uLastUpdate = pDBCRLProfile->nThisUpdate - now_t;
         uNextUpdate = pDBCRLProfile->nNextUpdate - now_t;
     }
 

@@ -1790,7 +1790,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_DB_getCertProfileExtList( db, nProfileNum, &pProfileExtList );
 
     JS_BIN_decodeHex( sIssueCertReq.pCSR, &binCSR );
-    ret = JS_PKI_getReqInfo( &binCSR, &sReqInfo, NULL );
+    ret = JS_PKI_getReqInfo( &binCSR, &sReqInfo, 1, NULL );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
