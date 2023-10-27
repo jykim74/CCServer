@@ -250,7 +250,7 @@ int serverInit()
         exit(0);
     }
 
-    ret = JS_BIN_fileRead( value, &g_binCert );
+    ret = JS_BIN_fileReadBER( value, &g_binCert );
     if( ret <= 0 )
     {
         fprintf( stderr, "fail to read certificate file(%s:%d)\n", value, ret );
@@ -264,7 +264,7 @@ int serverInit()
         exit(0);
     }
 
-    ret = JS_BIN_fileRead( value, &g_binPri );
+    ret = JS_BIN_fileReadBER( value, &g_binPri );
     if( ret <= 0 )
     {
         fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
