@@ -1817,7 +1817,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     int nSeq = JS_DB_getNextVal( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
 
-    if( strcasecmp( sCertProfile.pDNTemplate, "#CSR") == 0 )
+    if( strcasecmp( sCertProfile.pDNTemplate, "#CSR_DN") == 0 )
     {
         pRealDN = JS_strdup( sReqInfo.pSubjectDN );
     }
