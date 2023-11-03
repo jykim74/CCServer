@@ -3,6 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 
+#include "js_log.h"
 #include "js_pki.h"
 #include "js_http.h"
 #include "js_process.h"
@@ -22,6 +23,7 @@ SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
 int         g_nKeyType = JS_PKI_KEY_TYPE_RSA;
+int         g_nLogLevel = JS_LOG_LEVEL_INFO;
 
 
 JEnvList        *g_pEnvList = NULL;
@@ -117,6 +119,7 @@ int CC_Service( JThreadInfo *pThInfo )
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
+        JS_LOG_write( JS_LOG_LEVEL_ERROR, "fail to send message(%d)", ret );
         goto end;
     }
 
@@ -171,6 +174,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         goto end;
     }
 
+    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Req: %s", pReq );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
@@ -201,6 +205,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     if( ret != 0 )
     {
         fprintf( stderr, "fail to send message(%d)\n", ret );
+        JS_LOG_write( JS_LOG_LEVEL_ERROR, "fail to send message(%d)", ret );
         goto end;
     }
 
@@ -233,6 +238,17 @@ int serverInit()
         fprintf( stderr, "fail to read config file(%s:%d)\n", g_sConfPath, ret );
         exit(0);
     }
+
+    value = JS_CFG_getValue( g_pEnvList, "LOG_LEVEL" );
+    if( value ) g_nLogLevel = atoi( value );
+
+    JS_LOG_setLevel( g_nLogLevel );
+
+    value = JS_CFG_getValue( g_pEnvList, "LOG_PATH" );
+    if( value )
+        JS_LOG_open( value, "CC", JS_LOG_TYPE_DAILY );
+    else
+        JS_LOG_open( "log", "CC", JS_LOG_TYPE_DAILY );
 
     value = JS_CFG_getValue( g_pEnvList, "CA_KEY_TYPE" );
     if( value )

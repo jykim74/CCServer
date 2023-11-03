@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "js_log.h"
 #include "js_bin.h"
 #include "js_http.h"
 #include "js_cc.h"
@@ -237,6 +238,7 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
 
     JS_UTIL_printNameValList( stdout, "ParamList", pParamList );
     fprintf( stdout, "Path: %s\n", pPath );
+    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Path: %s", pPath );
 
     if( nType == JS_HTTP_METHOD_GET )
     {

@@ -18,6 +18,7 @@ add_executable(cc_srv
 	cc_work.c
 	cc_work.h
 	cc_srv.c
+        ../ca_cc_srv.cfg
 	)
 
 if(WIN32)
