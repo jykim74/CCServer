@@ -8,6 +8,7 @@
 #include "js_http.h"
 #include "js_cfg.h"
 #include "js_gen.h"
+#include "js_pkcs11.h"
 
 #include "cc_tools.h"
 #include "js_ldap.h"
@@ -20,6 +21,7 @@ extern  BIN         g_binCert;
 extern  BIN         g_binPri;
 extern  int         g_nKeyType;
 extern  LDAP        *g_pLDAP;
+extern  JP11_CTX        *g_pP11CTX;
 
 void _setCodeMsg( int nCode, const char *pMsg, char **ppJson )
 {

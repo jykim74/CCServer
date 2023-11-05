@@ -11,6 +11,7 @@
 extern BIN g_binCert;
 extern BIN g_binPri;
 extern int g_nKeyType;
+extern  JP11_CTX        *g_pP11CTX;
 
 int genToken( const char *pPassword, time_t tTime, char *pToken )
 {
@@ -75,7 +76,14 @@ int makeCert( JDB_CertProfile *pDBCertProfile,
         pDBCurList = pDBCurList->pNext;
     }
 
-    ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, g_nKeyType, &g_binPri, &g_binCert, pCert );
+    if( g_pP11CTX )
+    {
+        ret = JS_PKI_makeCertificateByP11( 0, pIssueCertInfo, pExtInfoList, &g_binPri, &g_binCert, g_pP11CTX, pCert );
+    }
+    else
+    {
+        ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, g_nKeyType, &g_binPri, &g_binCert, pCert );
+    }
 
 
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
@@ -173,7 +181,16 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
                             uLastUpdate,
                             uNextUpdate );
 
-    ret = JS_PKI_makeCRL( &sIssueCRLInfo,
+    if( g_pP11CTX )
+        ret = JS_PKI_makeCRLByP11( &sIssueCRLInfo,
+                                  pExtInfoList,
+                                  pRevokedList,
+                                  &g_binPri,
+                                  &g_binCert,
+                                  g_pP11CTX,
+                                  pCRL );
+    else
+        ret = JS_PKI_makeCRL( &sIssueCRLInfo,
                           pExtInfoList,
                           pRevokedList,
                           g_nKeyType,
