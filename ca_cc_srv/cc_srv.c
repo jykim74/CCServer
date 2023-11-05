@@ -16,7 +16,7 @@
 #include "cc_proc.h"
 #include "cc_tools.h"
 #include "js_ldap.h"
-
+#include "js_pkcs11.h"
 
 
 SSL_CTX     *g_pSSLCTX = NULL;
@@ -34,6 +34,7 @@ int             g_nPort = 9050;
 int             g_nSSLPort = 9150;
 
 LDAP            *g_pLDAP = NULL;
+JP11_CTX        *g_pP11CTX = NULL;
 
 int isLogin( sqlite3* db, JNameValList *pHeaderList )
 {
@@ -227,6 +228,99 @@ end:
     return 0;
 }
 
+int loginHSM()
+{
+    int ret = 0;
+    int nFlags = 0;
+
+
+    CK_ULONG uSlotCnt = 0;
+    CK_SLOT_ID  sSlotList[10];
+
+    int nUserType = 0;
+
+    nFlags |= CKF_RW_SESSION;
+    nFlags |= CKF_SERIAL_SESSION;
+    nUserType = CKU_USER;
+
+    int nSlotID = -1;
+    const char *pLibPath = NULL;
+    const char *pPIN = NULL;
+    int nPINLen = 0;
+    const char *value = NULL;
+
+    pLibPath = JS_CFG_getValue( g_pEnvList, "CA_HSM_LIB_PATH" );
+    if( pLibPath == NULL )
+    {
+        fprintf( stderr, "You have to set 'CA_HSM_LIB_PATH'\n" );
+        exit(0);
+    }
+
+    value = JS_CFG_getValue( g_pEnvList, "CA_HSM_SLOT_ID" );
+    if( value == NULL )
+    {
+        fprintf( stderr, "You have to set 'CA_HSM_SLOT_ID'\n" );
+        exit(0);
+    }
+
+    nSlotID = atoi( value );
+
+    pPIN = JS_CFG_getValue( g_pEnvList, "CA_HSM_PIN" );
+    if( pPIN == NULL )
+    {
+        fprintf( stderr, "You have to set 'CA_HSM_PIN'\n" );
+        exit(0);
+    }
+
+    nPINLen = atoi( pPIN );
+
+    ret = JS_PKCS11_LoadLibrary( &g_pP11CTX, pLibPath );
+    if( ret != 0 )
+    {
+        fprintf( stderr, "fail to load library(%s:%d)\n", value, ret );
+        exit(0);
+    }
+
+    ret = JS_PKCS11_Initialize( g_pP11CTX, NULL );
+    if( ret != CKR_OK )
+    {
+        fprintf( stderr, "fail to run initialize(%d)\n", ret );
+        return -1;
+    }
+
+    ret = JS_PKCS11_GetSlotList2( g_pP11CTX, CK_TRUE, sSlotList, &uSlotCnt );
+    if( ret != CKR_OK )
+    {
+        fprintf( stderr, "fail to run getSlotList fail(%d)\n", ret );
+        return -1;
+    }
+
+    if( uSlotCnt < 1 )
+    {
+        fprintf( stderr, "there is no slot(%d)\n", uSlotCnt );
+        return -1;
+    }
+
+    ret = JS_PKCS11_OpenSession( g_pP11CTX, sSlotList[nSlotID], nFlags );
+    if( ret != CKR_OK )
+    {
+        fprintf( stderr, "fail to run opensession(%s:%x)\n", JS_PKCS11_GetErrorMsg(ret), ret );
+        return -1;
+    }
+
+    ret = JS_PKCS11_Login( g_pP11CTX, nUserType, pPIN, nPINLen );
+    if( ret != 0 )
+    {
+        fprintf( stderr, "fail to run login hsm(%d)\n", ret );
+        return -1;
+    }
+
+    printf( "HSM login ok\n" );
+
+    return 0;
+}
+
+
 int serverInit()
 {
     int     ret = 0;
@@ -276,30 +370,10 @@ int serverInit()
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_USER" );
     if( value && strcasecmp( value, "YES" ) == 0 )
     {
-        int nSlotID = -1;
-        const char *pLibPath = NULL;
-        const char *pPIN = NULL;
-
-        pLibPath = JS_CFG_getValue( g_pEnvList, "CA_HSM_LIB_PATH" );
-        if( pLibPath == NULL )
+        ret = loginHSM();
+        if( ret != 0 )
         {
-            fprintf( stderr, "You have to set 'CA_HSM_LIB_PATH'\n" );
-            exit(0);
-        }
-
-        value = JS_CFG_getValue( g_pEnvList, "CA_HSM_SLOT_ID" );
-        if( value == NULL )
-        {
-            fprintf( stderr, "You have to set 'CA_HSM_SLOT_ID'\n" );
-            exit(0);
-        }
-
-        nSlotID = atoi( value );
-
-        pPIN = JS_CFG_getValue( g_pEnvList, "CA_HSM_PIN" );
-        if( pPIN == NULL )
-        {
-            fprintf( stderr, "You have to set 'CA_HSM_PIN'\n" );
+            fprintf( stderr, "fail to login HSM:%d\n", ret );
             exit(0);
         }
     }
