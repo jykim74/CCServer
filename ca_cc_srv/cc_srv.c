@@ -273,54 +273,87 @@ int serverInit()
         exit(0);
     }
 
-    value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_ENC" );
-    if( value && strcasecmp( value, "NO" ) == 0 )
+    value = JS_CFG_getValue( g_pEnvList, "CA_HSM_USER" );
+    if( value && strcasecmp( value, "YES" ) == 0 )
     {
-        value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
-        if( value == NULL )
+        int nSlotID = -1;
+        const char *pLibPath = NULL;
+        const char *pPIN = NULL;
+
+        pLibPath = JS_CFG_getValue( g_pEnvList, "CA_HSM_LIB_PATH" );
+        if( pLibPath == NULL )
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
+            fprintf( stderr, "You have to set 'CA_HSM_LIB_PATH'\n" );
             exit(0);
         }
 
-        ret = JS_BIN_fileReadBER( value, &g_binPri );
-        if( ret <= 0 )
+        value = JS_CFG_getValue( g_pEnvList, "CA_HSM_SLOT_ID" );
+        if( value == NULL )
         {
-            fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
-            exit( 0 );
+            fprintf( stderr, "You have to set 'CA_HSM_SLOT_ID'\n" );
+            exit(0);
+        }
+
+        nSlotID = atoi( value );
+
+        pPIN = JS_CFG_getValue( g_pEnvList, "CA_HSM_PIN" );
+        if( pPIN == NULL )
+        {
+            fprintf( stderr, "You have to set 'CA_HSM_PIN'\n" );
+            exit(0);
         }
     }
     else
     {
-        BIN binEnc = {0,0};
-        const char *pPasswd = NULL;
-
-        pPasswd = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PASSWD" );
-        if( pPasswd == NULL )
+        value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_ENC" );
+        if( value && strcasecmp( value, "NO" ) == 0 )
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PASSWD'\n" );
-            exit(0);
+            value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
+            if( value == NULL )
+            {
+                fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
+                exit(0);
+            }
+
+            ret = JS_BIN_fileReadBER( value, &g_binPri );
+            if( ret <= 0 )
+            {
+                fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
+                exit( 0 );
+            }
         }
-
-        value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
-        if( value == NULL )
+        else
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
-            exit(0);
-        }
+            BIN binEnc = {0,0};
+            const char *pPasswd = NULL;
 
-        ret = JS_BIN_fileReadBER( value, &binEnc );
-        if( ret <= 0 )
-        {
-            fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
-            exit( 0 );
-        }
+            pPasswd = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PASSWD" );
+            if( pPasswd == NULL )
+            {
+                fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PASSWD'\n" );
+                exit(0);
+            }
 
-        ret = JS_PKI_decryptPrivateKey( pPasswd, &binEnc, NULL, &g_binPri );
-        if( ret != 0 )
-        {
-            fprintf( stderr, "invalid password (%d)\n", ret );
-            exit(0);
+            value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
+            if( value == NULL )
+            {
+                fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
+                exit(0);
+            }
+
+            ret = JS_BIN_fileReadBER( value, &binEnc );
+            if( ret <= 0 )
+            {
+                fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
+                exit( 0 );
+            }
+
+            ret = JS_PKI_decryptPrivateKey( pPasswd, &binEnc, NULL, &g_binPri );
+            if( ret != 0 )
+            {
+                fprintf( stderr, "invalid password (%d)\n", ret );
+                exit(0);
+            }
         }
     }
 
