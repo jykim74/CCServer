@@ -434,7 +434,7 @@ int serverInit()
         exit(0);
     }
 
-    value = JS_CFG_getValue( g_pEnvList, "CA_HSM_USER" );
+    value = JS_CFG_getValue( g_pEnvList, "CA_HSM_USE" );
     if( value && strcasecmp( value, "YES" ) == 0 )
     {
         ret = loginHSM();
