@@ -209,6 +209,8 @@ int addSigner( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_SIGNER, NULL );
+
     return status;
 }
 
@@ -228,6 +230,8 @@ int addAdmin( sqlite3 *db, const char *pReq, char **ppRsp )
 
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_REG_ADMIN, NULL );
 
     return status;
 }
@@ -266,6 +270,8 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_ADMIN, NULL );
+
 end :
     JS_DB_resetAdmin( &sAdmin );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -295,6 +301,8 @@ int delAdmin( sqlite3 *db, const char *pPath, char **ppRsp )
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_ADMIN, NULL );
 
     return status;
 }
@@ -424,6 +432,8 @@ int delSigner( sqlite3 *db, const char *pPath, char **ppRsp )
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_SIGNER, NULL );
 
     return status;
 }
