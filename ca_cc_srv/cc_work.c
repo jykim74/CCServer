@@ -209,7 +209,7 @@ int addSigner( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
-    JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_SIGNER, NULL );
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_SIGNER, NULL );
 
     return status;
 }
@@ -381,6 +381,8 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
     }
 
     ret = JS_DB_addLCN( db, &sLCN );
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_LCN, NULL );
+
 end :
     JS_DB_resetLCN( &sLCN );
 
@@ -410,6 +412,8 @@ int delLCN( sqlite3 *db, const char *pPath, char **ppRsp )
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_LCN, NULL );
 
     return status;
 }
@@ -457,6 +461,8 @@ int delRevoked( sqlite3 *db, const char *pPath, char **ppRsp )
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_REVOKED, NULL );
+
     return status;
 }
 
@@ -475,6 +481,8 @@ int addRevoked( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret != 0 ) goto end;
 
     ret = JS_DB_changeCertStatus( db, sRevoked.nCertNum, 1 );
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_REVOKED, NULL );
 
  end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -527,6 +535,8 @@ int addCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppR
         JS_DB_addCertProfile( db, &sCertProfile );
         JS_DB_resetCertProfile( &sCertProfile );
     }
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_CERT_PROFILE, NULL );
 
 end :
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -594,6 +604,8 @@ int addCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
 
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_CRL_PROFILE, NULL );
+
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
@@ -634,6 +646,8 @@ int modCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppR
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_CERT_PROFILE, NULL );
 
 end :
     JS_DB_resetCertProfile( &sCertProfile );
@@ -680,6 +694,8 @@ int modCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
         ret = JS_CC_ERROR_BASE;
         goto end;
     }
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_CRL_PROFILE, NULL );
 
 end :
     JS_DB_resetCRLProfile( &sCRLProfile );
@@ -864,6 +880,8 @@ int modUser( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_USER, NULL );
+
 end :
     JS_DB_resetUser( &sUser );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -902,6 +920,8 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp )
         ret = JS_CC_ERROR_SYSTEM;
         goto end;
     }
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_USER, NULL );
 
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -966,6 +986,8 @@ int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
         }
     }
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_CERT_PROFILE, NULL );
+
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
@@ -1027,6 +1049,8 @@ int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
             goto end;
         }
     }
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_CRL_PROFILE, NULL );
 
 end :
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -2300,6 +2324,7 @@ int publishLDAP( sqlite3 *db, const char *pPath, const JNameValList *pParamList,
     }
 
     ret = 0;
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_PUBLISH_LDAP, NULL );
 
 end :
     if( ret != 0 )
@@ -2811,6 +2836,8 @@ int addConfig( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_CONFIG, NULL );
+
     return status;
 }
 
@@ -2901,6 +2928,8 @@ int modConfig( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_CONFIG, NULL );
+
 end :
     JS_DB_resetConfig( &sConfig );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
@@ -2930,6 +2959,8 @@ int delConfig( sqlite3 *db, const char *pPath, char **ppRsp )
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
+
+    if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_CONFIG, NULL );
 
     return status;
 }
