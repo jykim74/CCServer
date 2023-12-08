@@ -1,4 +1,5 @@
 #include "js_bin.h"
+#include "js_log.h"
 #include "js_cc.h"
 #include "js_bin.h"
 #include "js_db.h"
@@ -102,6 +103,7 @@ end :
     else
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -180,6 +182,7 @@ end :
     else
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -206,7 +209,12 @@ int addSigner( sqlite3 *db, const char *pReq, char **ppRsp )
     ret = JS_DB_addSigner( db, &sSigner );
     JS_DB_resetSigner( &sSigner );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_SIGNER, NULL );
@@ -228,7 +236,12 @@ int addAdmin( sqlite3 *db, const char *pReq, char **ppRsp )
     ret = JS_DB_addAdmin( db, &sAdmin );
     JS_DB_resetAdmin( &sAdmin );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_REG_ADMIN, NULL );
@@ -276,7 +289,12 @@ end :
     JS_DB_resetAdmin( &sAdmin );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
 
@@ -297,7 +315,12 @@ int delAdmin( sqlite3 *db, const char *pPath, char **ppRsp )
 
     ret = JS_DB_delAdmin( db, nNum );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -386,7 +409,12 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
 end :
     JS_DB_resetLCN( &sLCN );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     JS_BIN_reset( &binLCN );
@@ -408,7 +436,12 @@ int delLCN( sqlite3 *db, const char *pPath, char **ppRsp )
 
     ret = JS_DB_delLCN( db, nNum );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -432,7 +465,12 @@ int delSigner( sqlite3 *db, const char *pPath, char **ppRsp )
 
     ret = JS_DB_delSigner( db, nNum );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -456,7 +494,12 @@ int delRevoked( sqlite3 *db, const char *pPath, char **ppRsp )
 
     ret = JS_DB_delRevoked( db, nNum );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -485,7 +528,12 @@ int addRevoked( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_REVOKED, NULL );
 
  end :
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     JS_DB_resetRevoked( &sRevoked );
@@ -541,7 +589,12 @@ int addCertProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppR
 end :
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     return status;
@@ -607,7 +660,12 @@ int addCRLProfile( sqlite3 *db, const char *pPath, const char *pReq, char **ppRs
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_CRL_PROFILE, NULL );
 
 end :
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     return status;
@@ -653,7 +711,12 @@ end :
     JS_DB_resetCertProfile( &sCertProfile );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
 
@@ -701,7 +764,12 @@ end :
     JS_DB_resetCRLProfile( &sCRLProfile );
 
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     return status;
@@ -752,6 +820,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -838,6 +907,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -886,7 +956,11 @@ end :
     JS_DB_resetUser( &sUser );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
 
@@ -924,7 +998,11 @@ int delUser( sqlite3 *db, const char *pPath, char **ppRsp )
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_USER, NULL );
 
 end :
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
 
@@ -989,7 +1067,12 @@ int delCertProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLi
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_CERT_PROFILE, NULL );
 
 end :
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
@@ -1053,7 +1136,12 @@ int delCRLProfile( sqlite3 *db, const char *pPath, const JNameValList *pParamLis
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_DEL_CRL_PROFILE, NULL );
 
 end :
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
@@ -1115,6 +1203,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1159,6 +1248,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1212,6 +1302,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1262,6 +1353,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1345,6 +1437,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1428,6 +1521,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1490,6 +1584,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1566,6 +1661,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1643,6 +1739,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -1719,6 +1816,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -2034,6 +2132,7 @@ end:
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -2199,6 +2298,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
     }
 
@@ -2330,6 +2430,7 @@ end :
     if( ret != 0 )
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
@@ -2373,6 +2474,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pCRLDPList ) JS_UTIL_resetStrList( &pCRLDPList );
@@ -2440,6 +2542,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
 
@@ -2517,6 +2620,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -2594,6 +2698,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -2671,6 +2776,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -2735,6 +2841,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pTable ) JS_free( pTable );
@@ -2813,6 +2920,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -2833,7 +2941,12 @@ int addConfig( sqlite3 *db, const char *pReq, char **ppRsp )
     ret = JS_DB_addConfig( db, &sConfig );
     JS_DB_resetConfig( &sConfig );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( ret == 0 ) JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_ADD_CONFIG, NULL );
@@ -2887,6 +3000,7 @@ end :
     {
         status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
         _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
     }
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );
@@ -2934,7 +3048,12 @@ end :
     JS_DB_resetConfig( &sConfig );
     if( pLinkList ) JS_UTIL_resetStrList( &pLinkList );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
 
@@ -2955,7 +3074,12 @@ int delConfig( sqlite3 *db, const char *pPath, char **ppRsp )
 
     ret = JS_DB_delConfig( db, nNum );
 
-    if( ret != 0 ) status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+    if( ret != 0 )
+    {
+        status = JS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        LE( "Fail: %s", JS_CC_getCodeMsg(ret) );
+    }
+
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     if( pInfoList ) JS_UTIL_resetStrList( &pInfoList );

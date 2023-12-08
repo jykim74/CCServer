@@ -237,8 +237,7 @@ int procCC( sqlite3 *db, const char *pReq, int nType, const char *pPath, const J
     int ret = 0;
 
     JS_UTIL_printNameValList( stdout, "ParamList", pParamList );
-    fprintf( stdout, "Path: %s\n", pPath );
-    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Path: %s", pPath );
+    LV( "Path: %s", pPath );
 
     if( nType == JS_HTTP_METHOD_GET )
     {
