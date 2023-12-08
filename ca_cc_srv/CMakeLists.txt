@@ -82,7 +82,7 @@ else()
     endif()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        PKILib crypto ssl ltdl sqlite3 pthread )
+        PKILib crypto ssl ltdl sqlite3 ldap lber pthread )
 
     target_compile_definitions( ${PROJECT_NAME} PRIVATE USE_PRC )
 endif()
