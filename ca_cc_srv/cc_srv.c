@@ -3,6 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 
+#include "js_gen.h"
 #include "js_log.h"
 #include "js_pki.h"
 #include "js_http.h"
@@ -30,8 +31,8 @@ JEnvList        *g_pEnvList = NULL;
 char            *g_pDBPath = NULL;
 static char     g_sConfPath[1024];
 int             g_bVerbose = 0;
-int             g_nPort = 9050;
-int             g_nSSLPort = 9150;
+int             g_nPort = JS_CC_PORT;
+int             g_nSSLPort = JS_CC_SSL_PORT;
 
 LDAP            *g_pLDAP = NULL;
 JP11_CTX        *g_pP11CTX = NULL;
