@@ -621,7 +621,6 @@ int main( int argc, char *argv[] )
     JS_PRC_start();
     JS_PRC_detach();
 #else
-    JS_THD_logInit( "./log", "cc", 2 );
     JS_THD_registerService( "JS_CC", NULL, g_nPort, 4, CC_Service );
     JS_THD_registerService( "JS_CC_SSL", NULL, g_nSSLPort, 4, CC_SSL_Service );
     JS_THD_registerAdmin( NULL, g_nPort + 10 );
