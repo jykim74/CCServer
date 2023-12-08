@@ -25,6 +25,7 @@ BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
 int         g_nKeyType = JS_PKI_KEY_TYPE_RSA;
 int         g_nLogLevel = JS_LOG_LEVEL_INFO;
+int         g_nConfigDB = 0;
 
 
 JEnvList        *g_pEnvList = NULL;
@@ -36,6 +37,16 @@ int             g_nSSLPort = JS_CC_SSL_PORT;
 
 LDAP            *g_pLDAP = NULL;
 JP11_CTX        *g_pP11CTX = NULL;
+
+static char g_sBuildInfo[1024];
+
+const char *getBuildInfo()
+{
+    sprintf( g_sBuildInfo, "Version: %s Build Date : %s %s",
+            JS_CC_SRV_VERSION, __DATE__, __TIME__ );
+
+    return g_sBuildInfo;
+}
 
 int isLogin( sqlite3* db, JNameValList *pHeaderList )
 {
@@ -330,6 +341,70 @@ int loginHSM()
     return 0;
 }
 
+int readPriKeyDB( sqlite3 *db )
+{
+    int ret = 0;
+    const char *value = NULL;
+    JDB_KeyPair sKeyPair;
+
+    memset( &sKeyPair, 0x00, sizeof(sKeyPair));
+
+    value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_NUM" );
+    if( value == NULL )
+    {
+        LE( "You have to set 'CA_PRIVATE_KEY_NUM'" );
+        return -1;
+    }
+
+    ret = JS_DB_getKeyPair(db, atoi(value), &sKeyPair );
+    if( ret != 1 )
+    {
+        LE( "There is no key pair: %d", atoi(value));
+        return -1;
+    }
+
+    // 암호화 경우 복호화 필요함
+    value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_ENC" );
+
+    if( value && strcasecmp( value, "NO" ) == 0 )
+    {
+        JS_BIN_decodeHex( sKeyPair.pPrivate, &g_binPri );
+
+        if( ret <= 0 )
+        {
+            LE( "fail to read private key file(%s:%d)", value, ret );
+            return -2;
+        }
+    }
+    else
+    {
+        BIN binEnc = {0,0};
+        const char *pPasswd = NULL;
+
+        pPasswd = JS_CFG_getValue( g_pEnvList, "OCSP_SRV_PRIKEY_PASSWD" );
+        if( pPasswd == NULL )
+        {
+            LE( "You have to set 'OCSP_SRV_PRIKEY_PASSWD'" );
+            return -3;
+        }
+
+        JS_BIN_decodeHex( sKeyPair.pPrivate, &binEnc );
+
+        ret = JS_PKI_decryptPrivateKey( pPasswd, &binEnc, NULL, &g_binPri );
+        if( ret != 0 )
+        {
+            LE( "invalid password (%d)", ret );
+            return -3;
+        }
+
+        JS_BIN_reset( &binEnc );
+    }
+
+    JS_DB_resetKeyPair( &sKeyPair );
+
+    return 0;
+}
+
 int readPriKey()
 {
     int ret = 0;
@@ -389,17 +464,10 @@ int readPriKey()
 }
 
 
-int serverInit()
+int serverInit( sqlite3* db )
 {
     int     ret = 0;
     const char  *value = NULL;
-
-    ret = JS_CFG_readConfig( g_sConfPath, &g_pEnvList );
-    if( ret != 0 )
-    {
-        fprintf( stderr, "fail to read config file(%s:%d)\n", g_sConfPath, ret );
-        exit(0);
-    }
 
     value = JS_CFG_getValue( g_pEnvList, "LOG_LEVEL" );
     if( value ) g_nLogLevel = atoi( value );
@@ -421,18 +489,38 @@ int serverInit()
             g_nKeyType = JS_PKI_KEY_TYPE_RSA;
     }
 
-    value = JS_CFG_getValue( g_pEnvList, "CA_CERT_PATH" );
-    if( value == NULL )
+    if( g_nConfigDB == 1 )
     {
-        fprintf( stderr, "You have to set 'CA_CERT_PATH'\n" );
-        exit(0);
-    }
+        JDB_Cert sCert;
+        memset( &sCert, 0x00, sizeof(sCert));
 
-    ret = JS_BIN_fileReadBER( value, &g_binCert );
-    if( ret <= 0 )
+        value = JS_CFG_getValue( g_pEnvList, "CA_CERT_NUM" );
+        if( value == NULL )
+        {
+            LE( "You have to set 'CA_CERT_NUM'" );
+            return -1;
+        }
+
+        JS_DB_getCert( db, atoi(value), &sCert );
+        ret = JS_BIN_decodeHex( sCert.pCert, &g_binCert );
+
+        JS_DB_resetCert( &sCert );
+    }
+    else
     {
-        fprintf( stderr, "fail to read certificate file(%s:%d)\n", value, ret );
-        exit(0);
+        value = JS_CFG_getValue( g_pEnvList, "CA_CERT_PATH" );
+        if( value == NULL )
+        {
+            LE( "You have to set 'CA_CERT_PATH'" );
+            return -1;
+        }
+
+        ret = JS_BIN_fileReadBER( value, &g_binCert );
+        if( ret <= 0 )
+        {
+            LE( "fail to read certificate file(%s:%d)", value, ret );
+            return -1;
+        }
     }
 
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_USE" );
@@ -441,28 +529,44 @@ int serverInit()
         ret = loginHSM();
         if( ret != 0 )
         {
-            fprintf( stderr, "fail to login HSM:%d\n", ret );
-            exit(0);
+            LE( "fail to login HSM:%d", ret );
+            return -1;
         }
     }
     else
     {
-        ret = readPriKey();
+        if( g_nConfigDB == 1 )
+        {
+            ret = readPriKeyDB( db );
+        }
+        else
+        {
+            ret = readPriKey();
+        }
+
         if( ret != 0 )
         {
-            fprintf( stderr, "fail to read private key:%d\n", ret );
-            exit( 0 );
+            LE( "fail to read private key:%d", ret );
+            return -1;
         }
     }
 
-    value = JS_CFG_getValue( g_pEnvList, "CC_DB_PATH" );
-    if( value == NULL )
+    if( g_pDBPath == NULL && g_nConfigDB == 0 )
     {
-        fprintf( stderr, "You have to set 'CC_DB_PATH'" );
-        exit(0);
-    }
+        value = JS_CFG_getValue( g_pEnvList, "CC_DB_PATH" );
+        if( value == NULL )
+        {
+            LE( "You have to set 'CC_DB_PATH'" );
+            return -1;
+        }
 
-    g_pDBPath = value;
+        g_pDBPath = JS_strdup( value );
+        if( JS_UTIL_isFileExist( g_pDBPath ) == 0 )
+        {
+            LE( "The data file is no exist[%s]", g_pDBPath );
+            return -1;
+        }
+    }
 
     value = JS_CFG_getValue( g_pEnvList, "CC_PORT" );
     if( value ) g_nPort = atoi( value );
@@ -482,8 +586,8 @@ int serverInit()
 
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'LDAP_HOST'\n" );
-            exit(0);
+            LE( "You have to set 'LDAP_HOST'" );
+            return -1;
         }
 
         pLdapHost = value;
@@ -491,8 +595,8 @@ int serverInit()
         value = JS_CFG_getValue( g_pEnvList, "LDAP_PORT");
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'LDAP_PORT'\n" );
-            exit(0);
+            LE( "You have to set 'LDAP_PORT'" );
+            return -1;
         }
 
         nLdapPort = atoi( value );
@@ -500,8 +604,8 @@ int serverInit()
         value = JS_CFG_getValue( g_pEnvList, "LDAP_BINDDN" );
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'LDAP_BINDDN'\n" );
-            exit(0);
+            LE( "You have to set 'LDAP_BINDDN'" );
+            return -1;
         }
 
         pBindDN = value;
@@ -509,8 +613,8 @@ int serverInit()
         value = JS_CFG_getValue( g_pEnvList, "LDAP_SECRET" );
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'LDAP_SECRET'\n" );
-            exit(0);
+            LE( "You have to set 'LDAP_SECRET'" );
+            return -1;
         }
 
         pSecert = value;
@@ -518,24 +622,24 @@ int serverInit()
         g_pLDAP = JS_LDAP_init( pLdapHost, nLdapPort );
         if( g_pLDAP == NULL )
         {
-            fprintf( stderr, "fail to initialize ldap(%s:%d)\n", pLdapHost, nLdapPort );
-            exit(0);
+            LE( "fail to initialize ldap(%s:%d)", pLdapHost, nLdapPort );
+            return -1;
         }
 
         ret = JS_LDAP_bind( g_pLDAP, pBindDN, pSecert );
         if( ret != LDAP_SUCCESS )
         {
-            fprintf( stderr, "fail to bind ldap(%s:%d)\n", pBindDN, ret );
-            exit(0);
+            LE( "fail to bind ldap(%s:%d)", pBindDN, ret );
+            return -1;
         }
 
-        printf( "success to connect to ldap server\n" );
+        LI( "success to connect to ldap server" );
     }
 
     JS_SSL_initServer( &g_pSSLCTX );
     JS_SSL_setCertAndPriKey( g_pSSLCTX, &g_binPri, &g_binCert );
 
-    printf( "CC_Server Init OK [Port:%d SSL:%d]\n", g_nPort, g_nSSLPort );
+    LI( "CC_Server Init OK [Port:%d SSL:%d]", g_nPort, g_nSSLPort );
 
     return 0;
 }
@@ -547,7 +651,12 @@ int quitDaemon( const char *pCmd )
 
 void printUsage()
 {
-
+    printf( "JS CC Server ( %s )\n", getBuildInfo() );
+    printf( "[Options]\n" );
+    printf( "-v         : Verbose on(%d)\n", g_bVerbose );
+    printf( "-c config  : Set config file(%s)\n", g_sConfPath );
+    printf( "-d dbfile  : Use DB config(%d)\n", g_nConfigDB );
+    printf( "-h         : Print this message\n" );
 }
 
 #if !defined WIN32 && defined USE_PRC
@@ -574,11 +683,13 @@ static int ChildProcessTerm()
 
 int main( int argc, char *argv[] )
 {
-    int     nOpt = 0;
+    int ret = 0;
+    int nOpt = 0;
+    sqlite3* db = NULL;
 
     sprintf( g_sConfPath, "%s", "../ca_cc_srv.cfg" );
 
-    while(( nOpt = getopt( argc, argv, "c:qth")) != -1 )
+    while(( nOpt = getopt( argc, argv, "c:d:qvh")) != -1 )
     {
         switch( nOpt )
         {
@@ -590,17 +701,74 @@ int main( int argc, char *argv[] )
                 printUsage();
                 return 0;
 
-            case 't':
+            case 'v':
                 g_bVerbose = 1;
                 break;
 
             case 'c':
                 sprintf( g_sConfPath, "%s", optarg );
                 break;
+
+            case 'd':
+                g_pDBPath = JS_strdup( optarg );
+                g_nConfigDB = 1;
+                break;
         }
     }
 
-    serverInit();
+    if( g_nConfigDB == 1 )
+    {
+        JDB_ConfigList *pConfigList = NULL;
+
+        if( JS_UTIL_isFileExist( g_pDBPath ) == 0 )
+        {
+                fprintf( stderr, "The data file is no exist[%s]\n", g_pDBPath );
+                exit(0);
+        }
+
+        db = JS_DB_open( g_pDBPath );
+        if( db == NULL )
+        {
+                fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
+                exit(0);
+        }
+
+        ret = JS_DB_getConfigListByKind( db, JS_GEN_KIND_OCSP_SRV, &pConfigList );
+
+        ret = JS_CFG_readConfigFromDB( pConfigList, &g_pEnvList );
+        if( ret != 0 )
+        {
+                fprintf( stderr, "fail to open config file(%s)\n", g_sConfPath );
+                exit(0);
+        }
+
+
+        if( pConfigList ) JS_DB_resetConfigList( &pConfigList );
+    }
+    else
+    {
+        ret = JS_CFG_readConfig( g_sConfPath, &g_pEnvList );
+        if( ret != 0 )
+        {
+                fprintf( "fail to open config file(%s)\n", g_sConfPath );
+                exit(0);
+        }
+    }
+
+    ret = serverInit( db );
+
+    if( ret != 0 )
+    {
+        LE( "fail to initialize server: %d", ret );
+        exit( 0 );
+    }
+
+    if( g_nConfigDB == 1 )
+    {
+        if( db ) JS_DB_close( db );
+    }
+
+    LI( "CC Server initialized succfully" );
 
 #if !defined WIN32 && defined USE_PRC
     JProcInit sProcInit;
