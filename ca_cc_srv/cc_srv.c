@@ -178,7 +178,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         goto end;
     }
 
-    ret = JS_SSL_accept( g_pSSLCTX, pThInfo->nSockFd, &pSSL );
+    ret = JS_SSL_initAccept( g_pSSLCTX, pThInfo->nSockFd, &pSSL );
 
     ret = JS_HTTPS_recv( pSSL, &pMethInfo, &pHeaderList, &pReq );
     if( ret != 0 )
