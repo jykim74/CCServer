@@ -24,7 +24,6 @@ SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
 int         g_nKeyType = JS_PKI_KEY_TYPE_RSA;
-int         g_nLogLevel = JS_LOG_LEVEL_INFO;
 int         g_nConfigDB = 0;
 
 
@@ -470,9 +469,7 @@ int serverInit( sqlite3* db )
     const char  *value = NULL;
 
     value = JS_CFG_getValue( g_pEnvList, "LOG_LEVEL" );
-    if( value ) g_nLogLevel = atoi( value );
-
-    JS_LOG_setLevel( g_nLogLevel );
+    if( value ) JS_LOG_setLevel( atoi( value ));
 
     value = JS_CFG_getValue( g_pEnvList, "LOG_PATH" );
     if( value )
