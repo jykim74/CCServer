@@ -82,7 +82,7 @@ int makeCert( JDB_CertProfile *pDBCertProfile,
     }
     else
     {
-        ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, g_nKeyType, &g_binPri, &g_binCert, pCert );
+        ret = JS_PKI_makeCertificate( 0, pIssueCertInfo, pExtInfoList, &g_binPri, &g_binCert, pCert );
     }
 
 
@@ -193,7 +193,6 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
         ret = JS_PKI_makeCRL( &sIssueCRLInfo,
                           pExtInfoList,
                           pRevokedList,
-                          g_nKeyType,
                           &g_binPri,
                           &g_binCert,
                           pCRL );
