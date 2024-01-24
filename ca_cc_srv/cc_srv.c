@@ -24,7 +24,6 @@
 SSL_CTX     *g_pSSLCTX = NULL;
 BIN         g_binPri = {0,0};
 BIN         g_binCert = {0,0};
-int         g_nKeyType = JS_PKI_KEY_TYPE_RSA;
 int         g_nConfigDB = 0;
 
 
@@ -474,15 +473,6 @@ int serverInit( sqlite3* db )
         JS_LOG_open( value, "CC", JS_LOG_TYPE_DAILY );
     else
         JS_LOG_open( "log", "CC", JS_LOG_TYPE_DAILY );
-
-    value = JS_CFG_getValue( g_pEnvList, "CA_KEY_TYPE" );
-    if( value )
-    {
-        if( strcasecmp( value, "ECC") == 0 )
-            g_nKeyType = JS_PKI_KEY_TYPE_ECC;
-        else
-            g_nKeyType = JS_PKI_KEY_TYPE_RSA;
-    }
 
     if( g_nConfigDB == 1 )
     {

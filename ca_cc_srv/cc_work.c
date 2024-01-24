@@ -20,7 +20,6 @@
 extern  JEnvList    *g_pEnvList;
 extern  BIN         g_binCert;
 extern  BIN         g_binPri;
-extern  int         g_nKeyType;
 extern  LDAP        *g_pLDAP;
 extern  JP11_CTX        *g_pP11CTX;
 

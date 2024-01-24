@@ -10,7 +10,6 @@
 
 extern BIN g_binCert;
 extern BIN g_binPri;
-extern int g_nKeyType;
 extern  JP11_CTX        *g_pP11CTX;
 
 int genToken( const char *pPassword, time_t tTime, char *pToken )
