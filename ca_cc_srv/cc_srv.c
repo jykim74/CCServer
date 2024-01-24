@@ -13,6 +13,7 @@
 #include "js_log.h"
 #include "js_cc.h"
 #include "js_cfg.h"
+#include "js_log.h"
 
 #include "cc_proc.h"
 #include "cc_tools.h"
@@ -88,7 +89,7 @@ int CC_Service( JThreadInfo *pThInfo )
     sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
-        fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
+        LE( "fail to open db file(%s)", g_pDBPath );
         ret = -1;
         goto end;
     }
@@ -96,11 +97,11 @@ int CC_Service( JThreadInfo *pThInfo )
     ret = JS_HTTP_recv( pThInfo->nSockFd, &pMethInfo, &pHeaderList, &pReq );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to receive message(%d)\n", ret );
+        LE( "fail to receive message(%d)", ret );
         goto end;
     }
 
-    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Req: %s", pReq );
+    LV( "Req: %s", pReq );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
@@ -114,8 +115,7 @@ int CC_Service( JThreadInfo *pThInfo )
         {
             if( isLogin( db, pHeaderList ) == 0 )
             {
-                fprintf( stderr, "not logined\n" );
-                JS_LOG_write( JS_LOG_LEVEL_ERROR, "not logined" );
+                LE( "not logined" );
                 goto end;
             }
         }
@@ -130,12 +130,11 @@ int CC_Service( JThreadInfo *pThInfo )
     ret = JS_HTTP_send( pThInfo->nSockFd, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to send message(%d)\n", ret );
-        JS_LOG_write( JS_LOG_LEVEL_ERROR, "fail to send message(%d)", ret );
+        LE( "fail to send message(%d)", ret );
         goto end;
     }
 
-    if( pRsp ) fprintf( stdout, "Rsp: %s\n", pRsp );
+    if( pRsp ) LV( "Rsp: %s", pRsp );
     /* send response body */
 end:
     if( pReq ) JS_free( pReq );
@@ -172,7 +171,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
-        fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
+        LE( "fail to open db file(%s)", g_pDBPath );
         ret = -1;
         goto end;
     }
@@ -182,11 +181,11 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     ret = JS_HTTPS_recv( pSSL, &pMethInfo, &pHeaderList, &pReq );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to receive message(%d)\n", ret );
+        LE( "fail to receive message(%d)", ret );
         goto end;
     }
 
-    JS_LOG_write( JS_LOG_LEVEL_VERBOSE, "Req: %s", pReq );
+    LV( "Req: %s", pReq );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
@@ -200,8 +199,7 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         {
             if( isLogin( db, pHeaderList ) == 0 )
             {
-                fprintf( stderr, "not logined\n" );
-                JS_LOG_write( JS_LOG_LEVEL_ERROR, "not logined" );
+                LE( "not logined" );
                 goto end;
             }
         }
@@ -216,12 +214,11 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     ret = JS_HTTPS_send( pSSL, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to send message(%d)\n", ret );
-        JS_LOG_write( JS_LOG_LEVEL_ERROR, "fail to send message(%d)", ret );
+        LE( "fail to send message(%d)", ret );
         goto end;
     }
 
-    if( pRsp ) fprintf( stdout, "Rsp: %s\n", pRsp );
+    if( pRsp ) LV( "Rsp: %s", pRsp );
     /* send response body */
 end:
     if( pReq ) JS_free( pReq );
@@ -263,15 +260,15 @@ int loginHSM()
     pLibPath = JS_CFG_getValue( g_pEnvList, "CA_HSM_LIB_PATH" );
     if( pLibPath == NULL )
     {
-        fprintf( stderr, "You have to set 'CA_HSM_LIB_PATH'\n" );
-        exit(0);
+        LE( "You have to set 'CA_HSM_LIB_PATH'" );
+        return -1;
     }
 
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_SLOT_ID" );
     if( value == NULL )
     {
-        fprintf( stderr, "You have to set 'CA_HSM_SLOT_ID'\n" );
-        exit(0);
+        LE( "You have to set 'CA_HSM_SLOT_ID'" );
+        return -1;
     }
 
     nSlotID = atoi( value );
@@ -279,8 +276,8 @@ int loginHSM()
     pPIN = JS_CFG_getValue( g_pEnvList, "CA_HSM_PIN" );
     if( pPIN == NULL )
     {
-        fprintf( stderr, "You have to set 'CA_HSM_PIN'\n" );
-        exit(0);
+        LE( "You have to set 'CA_HSM_PIN'" );
+        return -1;
     }
 
     nPINLen = atoi( pPIN );
@@ -288,8 +285,8 @@ int loginHSM()
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_KEY_ID" );
     if( value == NULL )
     {
-        fprintf( stderr, "You have to set 'CA_HSM_KEY_ID'\n" );
-        exit( 0);
+        LE( "You have to set 'CA_HSM_KEY_ID'" );
+        return -1;
     }
 
     JS_BIN_decodeHex( value, &g_binPri );
@@ -297,45 +294,45 @@ int loginHSM()
     ret = JS_PKCS11_LoadLibrary( &g_pP11CTX, pLibPath );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to load library(%s:%d)\n", value, ret );
-        exit(0);
+        LE( "fail to load library(%s:%d)", value, ret );
+        return -1;
     }
 
     ret = JS_PKCS11_Initialize( g_pP11CTX, NULL );
     if( ret != CKR_OK )
     {
-        fprintf( stderr, "fail to run initialize(%d)\n", ret );
+        LE( "fail to run initialize(%d)", ret );
         return -1;
     }
 
     ret = JS_PKCS11_GetSlotList2( g_pP11CTX, CK_TRUE, sSlotList, &uSlotCnt );
     if( ret != CKR_OK )
     {
-        fprintf( stderr, "fail to run getSlotList fail(%d)\n", ret );
+        LE( "fail to run getSlotList fail(%d)", ret );
         return -1;
     }
 
     if( uSlotCnt < 1 )
     {
-        fprintf( stderr, "there is no slot(%d)\n", uSlotCnt );
+        LE( "there is no slot(%d)", uSlotCnt );
         return -1;
     }
 
     ret = JS_PKCS11_OpenSession( g_pP11CTX, sSlotList[nSlotID], nFlags );
     if( ret != CKR_OK )
     {
-        fprintf( stderr, "fail to run opensession(%s:%x)\n", JS_PKCS11_GetErrorMsg(ret), ret );
+        LE( "fail to run opensession(%s:%x)", JS_PKCS11_GetErrorMsg(ret), ret );
         return -1;
     }
 
     ret = JS_PKCS11_Login( g_pP11CTX, nUserType, pPIN, nPINLen );
     if( ret != 0 )
     {
-        fprintf( stderr, "fail to run login hsm(%d)\n", ret );
+        LE( "fail to run login hsm(%d)", ret );
         return -1;
     }
 
-    printf( "HSM login ok\n" );
+    LI( "HSM login ok" );
 
     return 0;
 }
@@ -415,15 +412,15 @@ int readPriKey()
         value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
-            exit(0);
+            LE( "You have to set 'CA_PRIVATE_KEY_PATH'" );
+            return -1;
         }
 
         ret = JS_BIN_fileReadBER( value, &g_binPri );
         if( ret <= 0 )
         {
-            fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
-            exit( 0 );
+            LE( "fail to read private key file(%s:%d)", value, ret );
+            return -1;
         }
     }
     else
@@ -434,31 +431,32 @@ int readPriKey()
         pPasswd = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PASSWD" );
         if( pPasswd == NULL )
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PASSWD'\n" );
-            exit(0);
+            LE( "You have to set 'CA_PRIVATE_KEY_PASSWD'" );
+            return -1;
         }
 
         value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
         if( value == NULL )
         {
-            fprintf( stderr, "You have to set 'CA_PRIVATE_KEY_PATH'" );
-            exit(0);
+            LE( "You have to set 'CA_PRIVATE_KEY_PATH'" );
+            return -1;
         }
 
         ret = JS_BIN_fileReadBER( value, &binEnc );
         if( ret <= 0 )
         {
-            fprintf( stderr, "fail to read private key file(%s:%d)\n", value, ret );
-            exit( 0 );
+            LE( "fail to read private key file(%s:%d)", value, ret );
+            return -1;
         }
 
         ret = JS_PKI_decryptPrivateKey( pPasswd, &binEnc, NULL, &g_binPri );
         if( ret != 0 )
         {
-            fprintf( stderr, "invalid password (%d)\n", ret );
-            exit(0);
+            LE( "invalid password (%d)", ret );
+            return -1;
         }
     }
+
     return 0;
 }
 
@@ -719,24 +717,29 @@ int main( int argc, char *argv[] )
 
         if( JS_UTIL_isFileExist( g_pDBPath ) == 0 )
         {
-                fprintf( stderr, "The data file is no exist[%s]\n", g_pDBPath );
-                exit(0);
+            fprintf( stderr, "The data file is no exist[%s]\n", g_pDBPath );
+            exit(0);
         }
 
         db = JS_DB_open( g_pDBPath );
         if( db == NULL )
         {
-                fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
-                exit(0);
+            fprintf( stderr, "fail to open db file(%s)\n", g_pDBPath );
+            exit(0);
         }
 
-        ret = JS_DB_getConfigListByKind( db, JS_GEN_KIND_OCSP_SRV, &pConfigList );
+        ret = JS_DB_getConfigListByKind( db, JS_GEN_KIND_CC_SRV, &pConfigList );
+        if( ret <= 0 )
+        {
+            fprintf( stderr, "There is no config data in database: %d\n", ret );
+            exit(0);
+        }
 
         ret = JS_CFG_readConfigFromDB( pConfigList, &g_pEnvList );
         if( ret != 0 )
         {
-                fprintf( stderr, "fail to open config file(%s)\n", g_sConfPath );
-                exit(0);
+            fprintf( stderr, "fail to open config file(%s)\n", g_sConfPath );
+            exit(0);
         }
 
 
@@ -747,8 +750,8 @@ int main( int argc, char *argv[] )
         ret = JS_CFG_readConfig( g_sConfPath, &g_pEnvList );
         if( ret != 0 )
         {
-                fprintf( "fail to open config file(%s)\n", g_sConfPath );
-                exit(0);
+            fprintf( "fail to open config file(%s)\n", g_sConfPath );
+            exit(0);
         }
     }
 
