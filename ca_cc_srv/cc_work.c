@@ -47,6 +47,9 @@ int authWork( sqlite3 *db, const char *pReq, char **ppRsp )
     JCC_AuthReq sAuthReq;
     JCC_AuthRsp sAuthRsp;
 
+    BIN binGenMAC = {0,0};
+    BIN binMAC = {0,0};
+
     char        sToken[128];
 
     memset( &sAdmin, 0x00, sizeof(sAdmin));
@@ -65,12 +68,16 @@ int authWork( sqlite3 *db, const char *pReq, char **ppRsp )
     if( ret < 1 )
     {
         ret = JS_CC_ERROR_INVALID_USER;
+        LE( "There is no user: %s", sAuthReq.pUserName );
         goto end;
     }
 
-    if( strcasecmp( sAuthReq.pPasswd, sAdmin.pPassword ) != 0 )
+    JS_GEN_genPasswdHMAC( sAuthReq.pPasswd, &binGenMAC );
+    JS_BIN_decodeHex( sAdmin.pPassword, &binMAC );
+    if( JS_BIN_cmp( &binGenMAC, &binMAC ) != 0 )
     {
         ret = JS_CC_ERROR_INVALID_PASSWD;
+        LE( "Password is wrong" );
         goto end;
     }
 
@@ -226,11 +233,25 @@ int addAdmin( sqlite3 *db, const char *pReq, char **ppRsp )
     int     ret = 0;
     int     status = JS_HTTP_STATUS_OK;
 
+    BIN     binMAC = {0,0};
+    char    *pHexMAC = NULL;
+
     JCC_Admin  sAdmin;
     memset( &sAdmin, 0x00, sizeof(sAdmin));
 
     JS_CC_decodeAdmin( pReq, &sAdmin );
     if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
+
+    JS_GEN_genPasswdHMAC( sAdmin.pPassword, &binMAC );
+    JS_BIN_encodeHex( &binMAC, &pHexMAC );
+
+    if( sAdmin.pPassword )
+    {
+        JS_free( sAdmin.pPassword );
+        sAdmin.pPassword = NULL;
+    }
+
+    sAdmin.pPassword = pHexMAC;
 
     ret = JS_DB_addAdmin( db, &sAdmin );
     JS_DB_resetAdmin( &sAdmin );
@@ -244,6 +265,7 @@ int addAdmin( sqlite3 *db, const char *pReq, char **ppRsp )
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
 
     JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_REG_ADMIN, NULL );
+    JS_BIN_reset( &binMAC );
 
     return status;
 }
@@ -255,6 +277,9 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     int     nSeq = -1;
     JStrList    *pLinkList = NULL;
     JCC_Admin  sAdmin;
+
+    BIN     binMAC = {0,0};
+    char    *pHexMAC = NULL;
 
     memset( &sAdmin, 0x00, sizeof(sAdmin));
 
@@ -275,6 +300,17 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    JS_GEN_genPasswdHMAC( sAdmin.pPassword, &binMAC );
+    JS_BIN_encodeHex( &binMAC, &pHexMAC );
+
+    if( sAdmin.pPassword )
+    {
+        JS_free( sAdmin.pPassword );
+        sAdmin.pPassword = NULL;
+    }
+
+    sAdmin.pPassword = pHexMAC;
+
     ret = JS_DB_modAdmin( db, nSeq, &sAdmin );
     if( ret != 0 )
     {
@@ -283,6 +319,7 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
     }
 
     JS_addAudit( db, JS_GEN_KIND_CC_SRV, JS_GEN_OP_MOD_ADMIN, NULL );
+
 
 end :
     JS_DB_resetAdmin( &sAdmin );
@@ -295,7 +332,7 @@ end :
     }
 
     _setCodeMsg( ret, JS_CC_getCodeMsg(ret), ppRsp );
-
+    JS_BIN_reset( &binMAC );
 
     return status;
 }
