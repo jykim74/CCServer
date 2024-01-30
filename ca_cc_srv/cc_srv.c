@@ -85,6 +85,8 @@ int CC_Service( JThreadInfo *pThInfo )
     JNameValList    *pRspHeaderList = NULL;
     JNameValList    *pParamList = NULL;
 
+    const char *pRspMethod = NULL;
+
     sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
@@ -100,13 +102,15 @@ int CC_Service( JThreadInfo *pThInfo )
         goto end;
     }
 
-    LV( "Req: %s", pReq );
+    if( pMethInfo ) LI("MethInfo : %s", pMethInfo );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
-    if( strcasecmp( pPath, "PING" ) == 0 )
-    {
+    if( pPath ) LI( "Path: %s", pPath );
 
+    if( strcasecmp( pPath, "/PING" ) == 0 )
+    {
+        pRspMethod = JS_HTTP_getStatusMsg( JS_HTTP_STATUS_OK );
     }
     else
     {
@@ -120,11 +124,11 @@ int CC_Service( JThreadInfo *pThInfo )
         }
 
         status = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
+        pRspMethod = JS_HTTP_getStatusMsg( status );
     }
 
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
-    const char *pRspMethod = JS_HTTP_getStatusMsg( status );
 
     ret = JS_HTTP_send( pThInfo->nSockFd, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
@@ -167,6 +171,8 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
     JNameValList    *pRspHeaderList = NULL;
     JNameValList    *pParamList = NULL;
 
+    const char *pRspMethod = NULL;
+
     sqlite3* db = JS_DB_open( g_pDBPath );
     if( db == NULL )
     {
@@ -184,13 +190,15 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         goto end;
     }
 
-    LV( "Req: %s", pReq );
+    if( pMethInfo ) LI("MethInfo : %s", pMethInfo );
 
     JS_HTTP_getMethodPath( pMethInfo, &nType, &pPath, &pParamList );
 
-    if( strcasecmp( pPath, "PING" ) == 0 )
-    {
+    if( pPath ) LI( "Path: %s", pPath );
 
+    if( strcasecmp( pPath, "/PING" ) == 0 )
+    {
+        pRspMethod = JS_HTTP_getStatusMsg( JS_HTTP_STATUS_OK );
     }
     else
     {
@@ -204,11 +212,11 @@ int CC_SSL_Service( JThreadInfo *pThInfo )
         }
 
         status = procCC( db, pReq, nType, pPath, pParamList, &pRsp );
+        pRspMethod = JS_HTTP_getStatusMsg( status );
     }
 
     JS_UTIL_createNameValList2("accept", "application/json", &pRspHeaderList);
     JS_UTIL_appendNameValList2( pRspHeaderList, "content-type", "application/json");
-    const char *pRspMethod = JS_HTTP_getStatusMsg( status );
 
     ret = JS_HTTPS_send( pSSL, pRspMethod, pRspHeaderList, pRsp );
     if( ret != 0 )
@@ -376,10 +384,10 @@ int readPriKeyDB( sqlite3 *db )
         BIN binEnc = {0,0};
         const char *pPasswd = NULL;
 
-        pPasswd = JS_CFG_getValue( g_pEnvList, "OCSP_SRV_PRIKEY_PASSWD" );
+        pPasswd = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PASSWD" );
         if( pPasswd == NULL )
         {
-            LE( "You have to set 'OCSP_SRV_PRIKEY_PASSWD'" );
+            LE( "You have to set 'CA_PRIVATE_KEY_PASSWD'" );
             return -3;
         }
 
