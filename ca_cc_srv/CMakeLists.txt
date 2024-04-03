@@ -45,6 +45,7 @@ if(WIN32)
 
 elseif(APPLE)
     include_directories( ../../PKILib
+        ../../lib/mac/openssl3/include
         /usr/local/include )
 
     if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
