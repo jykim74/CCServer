@@ -384,11 +384,11 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
 
     if( sLCN.nStatus == 1 )
     {
-        char sKey[128];
+        char sAuthKey[128];
         JS_LICENSE_INFO sLCNInfo;
 
         memset( &sLCNInfo, 0x00, sizeof(sLCNInfo));
-        memset( sKey, 0x00, sizeof(sKey));
+        memset( sAuthKey, 0x00, sizeof(sAuthKey));
 
         if( sLCN.pIssued )
         {
@@ -416,17 +416,17 @@ int addLCN( sqlite3 *db, const char *pReq, char **ppRsp )
                         sLCN.pExt,
                         NULL );
 
-        JS_LCN_DeriveKey( sKey, &sLCNInfo );
+        JS_LCN_DeriveKey( sAuthKey, &sLCNInfo );
 
-        strcpy( sLCNInfo.sKey, sKey );
+        strcpy( sLCNInfo.sAuthKey, sAuthKey );
 
-        if( sLCN.pKey )
+        if( sLCN.pAuthKey )
         {
-            JS_free( sLCN.pKey );
-            sLCN.pKey = NULL;
+            JS_free( sLCN.pAuthKey );
+            sLCN.pAuthKey = NULL;
         }
 
-        sLCN.pKey = JS_strdup( sKey );
+        sLCN.pAuthKey = JS_strdup( sAuthKey );
 
         JS_BIN_set( &binLCN, (unsigned char *)&sLCNInfo, sizeof(sLCNInfo));
         JS_BIN_encodeHex( &binLCN, &pHexLCN );
