@@ -143,7 +143,6 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
     ret = JS_CC_decodeRegUserReq( pReq, &sRegUserReq );
     if( ret != 0 ) return JS_CC_ERROR_WRONG_MSG;
 
-//    nRefNum = JS_DB_getSeq( db, "TB_USER" );
     nRefNum = JS_DB_getLastVal( db, "TB_USER" );
     if( nRefNum < 0 )
     {
@@ -151,6 +150,7 @@ int regUser( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
+    nRefNum++;
     sprintf( sRefNum, "%d", nRefNum );
     ret = JS_PKI_genRandom( 4, &binRand );
     if( ret != 0 )
