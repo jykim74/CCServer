@@ -1399,7 +1399,7 @@ end :
     return status;
 }
 
-int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int getCertProfiles( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;
@@ -1411,7 +1411,21 @@ int getCertPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamL
     {
         JCC_CertProfileList *pCertProfileList = NULL;
 
-        ret = JS_DB_getCertProfileList( db, &pCertProfileList );
+        if( pParamList )
+        {
+            const char *pValue = NULL;
+            int nType = -1;
+
+            pValue = JS_UTIL_valueFromNameValList( pParamList, "type" );
+            if( pValue ) nType = atoi( pValue );
+
+            ret = JS_DB_getCertProfileListType( db, nType, &pCertProfileList );
+        }
+        else
+        {
+            ret = JS_DB_getCertProfileList( db, &pCertProfileList );
+        }
+
         if( ret < 1 )
         {
             ret = JS_CC_ERROR_NO_DATA;
@@ -1483,7 +1497,7 @@ end :
     return status;
 }
 
-int getCRLPolicies( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
+int getCRLProfiles( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char **ppRsp )
 {
     int ret = 0;
     int     status = JS_HTTP_STATUS_OK;

@@ -38,11 +38,11 @@ int runGet( sqlite3 *db, const char *pPath, const JNameValList *pParamList, char
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CERT_PROFILE, strlen(JS_CC_PATH_CERT_PROFILE)) == 0 )
     {
-        ret = getCertPolicies( db, pPath, pParamList, ppRsp );
+        ret = getCertProfiles( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_CRL_PROFILE, strlen(JS_CC_PATH_CRL_PROFILE)) == 0 )
     {
-        ret = getCRLPolicies( db, pPath, pParamList, ppRsp );
+        ret = getCRLProfiles( db, pPath, pParamList, ppRsp );
     }
     else if( strncasecmp( pPath, JS_CC_PATH_SIGNER, strlen(JS_CC_PATH_SIGNER)) == 0 )
     {
