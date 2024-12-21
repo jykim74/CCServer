@@ -1987,16 +1987,35 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 	JS_PKI_getPublicKeyValue( &binPub, &binPubVal );
     JS_PKI_getKeyIdentifier( &binPubVal, sKeyID );
 
+
+
+    JS_PKI_getPeriod( sCertProfile.nNotBefore,
+                     sCertProfile.nNotAfter,
+                     now_t,
+                     &uNotBefore,
+                     &uNotAfter );
+/*
     if( sCertProfile.nNotBefore <= 0 )
     {
         uNotBefore = 0;
         uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24;
+    }
+    else if( sCertProfile.nNotBefore == 1 )
+    {
+        uNotBefore = 0;
+        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24 * 30;
+    }
+    else if( sCertProfile.nNotBefore == 2 )
+    {
+        uNotBefore = 0;
+        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24 * 365;
     }
     else
     {
         uNotBefore = sCertProfile.nNotBefore - now_t;
         uNotAfter = sCertProfile.nNotAfter - now_t;
     }
+*/
 
 //    int nSeq = JS_DB_getSeq( db, "TB_CERT" );
     int nSeq = JS_DB_getNextVal( db, "TB_CERT" );
