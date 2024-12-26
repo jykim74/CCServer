@@ -1911,6 +1911,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JReqInfo            sReqInfo;
     JDB_Cert            sCert;
     JExtensionInfoList  *pExtInfoList = NULL;
+    JExtensionInfoList  *pCSRExtInfoList = NULL;
     char                *pHexCRLDP = NULL;
     char                *pCRLDP = NULL;
 
@@ -1975,7 +1976,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_DB_getCertProfileExtList( db, nProfileNum, &pProfileExtList );
 
     JS_BIN_decodeHex( sIssueCertReq.pCSR, &binCSR );
-    ret = JS_PKI_getReqInfo( &binCSR, &sReqInfo, 1, NULL );
+    ret = JS_PKI_getReqInfo( &binCSR, &sReqInfo, 1, &pCSRExtInfoList );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -1994,30 +1995,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                      now_t,
                      &uNotBefore,
                      &uNotAfter );
-/*
-    if( sCertProfile.nNotBefore <= 0 )
-    {
-        uNotBefore = 0;
-        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24;
-    }
-    else if( sCertProfile.nNotBefore == 1 )
-    {
-        uNotBefore = 0;
-        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24 * 30;
-    }
-    else if( sCertProfile.nNotBefore == 2 )
-    {
-        uNotBefore = 0;
-        uNotAfter = sCertProfile.nNotAfter * 60 * 60 * 24 * 365;
-    }
-    else
-    {
-        uNotBefore = sCertProfile.nNotBefore - now_t;
-        uNotAfter = sCertProfile.nNotAfter - now_t;
-    }
-*/
 
-//    int nSeq = JS_DB_getSeq( db, "TB_CERT" );
     int nSeq = JS_DB_getNextVal( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
 
@@ -2117,7 +2095,7 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                              sReqInfo.nKeyAlg,
                              sReqInfo.pPublicKey );
 
-    ret = makeCert( &sCertProfile, pProfileExtList, &sIssueCertInfo, &binCert );
+    ret = makeCert( &sCertProfile, pProfileExtList, pCSRExtInfoList, &sIssueCertInfo, &binCert );
     if( ret != 0 )
     {
         ret = JS_CC_ERROR_SYSTEM;
@@ -2185,6 +2163,7 @@ end:
     JS_CC_resetIssueCertRsp( &sIssueCertRsp );
     JS_DB_resetCertProfile( &sCertProfile );
     if( pProfileExtList ) JS_DB_resetProfileExtList( &pProfileExtList );
+
     JS_DB_resetUser( &sUser );
     JS_PKI_resetReqInfo( &sReqInfo );
     JS_PKI_resetIssueCertInfo( &sIssueCertInfo );
@@ -2195,6 +2174,7 @@ end:
     JS_BIN_reset( &binPub );
 	JS_BIN_reset( &binPubVal );
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
+    if( pCSRExtInfoList ) JS_PKI_resetExtensionInfoList( &pCSRExtInfoList );
     if( pCRLDP ) JS_free( pCRLDP );
     if( pHexCRLDP ) JS_free( pHexCRLDP );
     if( pRealDN ) JS_free( pRealDN );

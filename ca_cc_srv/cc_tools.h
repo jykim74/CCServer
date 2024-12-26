@@ -11,6 +11,7 @@
 int genToken( const char *pPassword, time_t tTime, char *pToken );
 int makeCert( JDB_CertProfile *pDBCertProfile,
               JDB_ProfileExtList *pDBProfileExtList,
+              JExtensionInfoList *pCSRExtInfoList,
               JIssueCertInfo *pIssueCertInfo,
               BIN *pCert );
 

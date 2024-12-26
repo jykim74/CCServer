@@ -48,12 +48,14 @@ end :
 
 int makeCert( JDB_CertProfile *pDBCertProfile,
               JDB_ProfileExtList *pDBProfileExtList,
+              JExtensionInfoList *pCSRExtInfoList,
               JIssueCertInfo *pIssueCertInfo,
               BIN *pCert )
 {
     int ret = 0;
 
     JExtensionInfoList  *pExtInfoList = NULL;
+    JExtensionInfoList  *pCertExtInfoList = NULL;
     JDB_ProfileExtList   *pDBCurList = NULL;
     int nExtCnt = JS_DB_countProfileExtList( pDBProfileExtList );
 
@@ -75,6 +77,8 @@ int makeCert( JDB_CertProfile *pDBCertProfile,
         pDBCurList = pDBCurList->pNext;
     }
 
+    JS_PKI_getExtensionUsageList( pDBCertProfile->nExtUsage, pCertExtInfoList, pCSRExtInfoList, &pExtInfoList );
+
     if( g_pP11CTX )
     {
         ret = JS_PKI_makeCertificateByP11( 0, pIssueCertInfo, pExtInfoList, &g_binPri, &g_binCert, g_pP11CTX, pCert );
@@ -86,6 +90,7 @@ int makeCert( JDB_CertProfile *pDBCertProfile,
 
 
     if( pExtInfoList ) JS_PKI_resetExtensionInfoList( &pExtInfoList );
+    if( pCertExtInfoList ) JS_PKI_resetExtensionInfoList( &pCertExtInfoList );
 
     return ret;
 }
