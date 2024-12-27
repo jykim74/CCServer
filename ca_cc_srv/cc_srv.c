@@ -466,14 +466,14 @@ int readPriKey()
             LE( "You have to set 'CA_PRIVATE_KEY_PASSWD'" );
             return -1;
         }
+        else
+        {
+            memcpy( sPasswd, value, strlen(value));
+        }
 
         if( strncasecmp( value, "{ENC}", 5 ) == 0 )
         {
             JS_GEN_decPassword( value, sPasswd );
-        }
-        else
-        {
-            memcpy( sPasswd, value, strlen(value));
         }
 
         value = JS_CFG_getValue( g_pEnvList, "CA_PRIVATE_KEY_PATH" );
