@@ -284,17 +284,21 @@ int loginHSM()
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_PIN" );
     if( value == NULL )
     {
-        LE( "You have to set 'CA_HSM_PIN'" );
-        return -1;
-    }
-
-    if( strncasecmp( value, "{ENC}", 5 ) == 0 )
-    {
-        JS_GEN_decPassword( value, sPIN );
+        ret = JS_GEN_getPassword( sPIN );
+        if( ret != 0 )
+        {
+            LE( "You have to set 'CMP_HSM_PIN'" );
+            return -1;
+        }
     }
     else
     {
-        memcpy( sPIN, value, strlen(value) );
+        memcpy( sPIN, value, strlen(value));
+    }
+
+    if( strncasecmp( sPIN, "{ENC}", 5 ) == 0 )
+    {
+        JS_GEN_decPassword( sPIN, sPIN );
     }
 
     value = JS_CFG_getValue( g_pEnvList, "CA_HSM_KEY_ID" );
