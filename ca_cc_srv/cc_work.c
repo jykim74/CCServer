@@ -299,7 +299,7 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         ret = JS_CC_ERROR_WRONG_MSG;
         goto end;
     }
-/*
+
     JS_GEN_genPasswdHMAC( sAdmin.pPassword, &binMAC );
     JS_BIN_encodeHex( &binMAC, &pHexMAC );
 
@@ -308,7 +308,6 @@ int modAdmin( sqlite3 *db, const char *pPath, const char *pReq, char **ppRsp )
         JS_free( sAdmin.pPassword );
         sAdmin.pPassword = NULL;
     }
-*/
 
     sAdmin.pPassword = pHexMAC;
 
