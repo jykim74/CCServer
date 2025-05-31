@@ -2310,7 +2310,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    JS_DB_setCRL( &sDBCRL, nSeq, now_t, -1, sCRLInfo.pSignAlgorithm, sCRLReq.pCRLDP, pHexCRL );
+    JS_DB_setCRL( &sDBCRL, nSeq, now_t, -1, sCRLInfo.pSignAlgorithm, sCRLInfo.uThisUpdate, sCRLInfo.uNextUpdate, sCRLReq.pCRLDP, pHexCRL );
 
     ret = JS_DB_addCRL( db, &sDBCRL );
     if( ret != 0 )
