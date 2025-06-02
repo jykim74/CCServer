@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <limits.h>
 
 #include "js_gen.h"
 #include "js_log.h"
@@ -714,7 +716,11 @@ int main( int argc, char *argv[] )
     int nOpt = 0;
     sqlite3* db = NULL;
 
-    sprintf( g_sConfPath, "%s", "../ca_cc_srv.cfg" );
+    char sDir[1024];
+    getcwd( sDir, sizeof(sDir));
+    printf( "Dir: %s\n", sDir );
+
+    sprintf( g_sConfPath, "%s", "../../../ca_cc_srv.cfg" );
 
     while(( nOpt = getopt( argc, argv, "c:d:qvh")) != -1 )
     {
@@ -782,7 +788,7 @@ int main( int argc, char *argv[] )
         ret = JS_CFG_readConfig( g_sConfPath, &g_pEnvList );
         if( ret != 0 )
         {
-            fprintf( "fail to open config file(%s)\n", g_sConfPath );
+            fprintf( stderr, "fail to open config file(%s)\n", g_sConfPath );
             exit(0);
         }
     }
