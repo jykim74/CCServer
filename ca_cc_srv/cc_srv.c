@@ -720,7 +720,7 @@ int main( int argc, char *argv[] )
     getcwd( sDir, sizeof(sDir));
     printf( "Dir: %s\n", sDir );
 
-    sprintf( g_sConfPath, "%s", "../../../ca_cc_srv.cfg" );
+    sprintf( g_sConfPath, "%s", "../ca_cc_srv.cfg" );
 
     while(( nOpt = getopt( argc, argv, "c:d:qvh")) != -1 )
     {
