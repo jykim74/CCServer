@@ -1989,8 +1989,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 
 
 
-    JS_PKI_getPeriod( sCertProfile.nNotBefore,
-                     sCertProfile.nNotAfter,
+    JS_PKI_getPeriod( sCertProfile.tNotBefore,
+                     sCertProfile.tNotAfter,
                      now_t,
                      &uNotBefore,
                      &uNotAfter );
@@ -2310,7 +2310,7 @@ int issueCRL( sqlite3 *db, const char *pReq, char **ppRsp )
         goto end;
     }
 
-    JS_DB_setCRL( &sDBCRL, nSeq, now_t, -1, sCRLInfo.pSignAlgorithm, sCRLInfo.uThisUpdate, sCRLInfo.uNextUpdate, sCRLReq.pCRLDP, pHexCRL );
+    JS_DB_setCRL( &sDBCRL, nSeq, now_t, -1, sCRLInfo.pSignAlgorithm, sCRLInfo.tThisUpdate, sCRLInfo.tNextUpdate, sCRLReq.pCRLDP, pHexCRL );
 
     ret = JS_DB_addCRL( db, &sDBCRL );
     if( ret != 0 )
@@ -2576,7 +2576,7 @@ int getCertStatus( sqlite3 *db, const JNameValList *pParamList, char **ppRsp )
         JS_CC_setCertStatus( &sCertStatus,
                              sDBCert.nStatus,
                              sDBRevoked.nReason,
-                             sDBRevoked.nRevokedDate );
+                             sDBRevoked.tRevokedDate );
     }
     else
     {

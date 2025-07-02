@@ -102,8 +102,8 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
 {
     int     ret = 0;
     int     nVersion = 1;
-    long    uLastUpdate = 0;
-    long    uNextUpdate = 0;
+    time_t  tLastUpdate = 0;
+    time_t  tNextUpdate = 0;
     JIssueCRLInfo       sIssueCRLInfo;
 
     JExtensionInfoList  *pExtInfoList = NULL;
@@ -111,16 +111,16 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
 
     memset( &sIssueCRLInfo, 0x00, sizeof(sIssueCRLInfo));
 
-    if( pDBCRLProfile->nThisUpdate <= 0 )
+    if( pDBCRLProfile->tThisUpdate <= 0 )
     {
-        uLastUpdate = 0;
-        uNextUpdate = pDBCRLProfile->nNextUpdate * 60 * 60 * 24;
+        tLastUpdate = 0;
+        tNextUpdate = pDBCRLProfile->tNextUpdate * 60 * 60 * 24;
     }
     else
     {
         time_t now_t = time(NULL);
-        uLastUpdate = pDBCRLProfile->nThisUpdate - now_t;
-        uNextUpdate = pDBCRLProfile->nNextUpdate - now_t;
+        tLastUpdate = pDBCRLProfile->tThisUpdate - now_t;
+        tNextUpdate = pDBCRLProfile->tNextUpdate - now_t;
     }
 
     while( pDBProfileExtList )
@@ -164,7 +164,7 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
 
         JS_PKI_setRevokeInfo( &sRevokeInfo,
                               pDBRevokedList->sRevoked.pSerial,
-                              pDBRevokedList->sRevoked.nRevokedDate,
+                              pDBRevokedList->sRevoked.tRevokedDate,
                               &sExtReason );
 
         if( pRevokedList == NULL )
@@ -182,8 +182,8 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
     JS_PKI_setIssueCRLInfo( &sIssueCRLInfo,
                             nVersion,
                             pDBCRLProfile->pHash,
-                            uLastUpdate,
-                            uNextUpdate );
+                            tLastUpdate,
+                            tNextUpdate );
 
     if( g_pP11CTX )
         ret = JS_PKI_makeCRLByP11( &sIssueCRLInfo,
