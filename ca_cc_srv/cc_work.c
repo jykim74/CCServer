@@ -1920,8 +1920,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
 	BIN					binPubVal = {0,0};
 
     char                sSerial[32];
-    long                uNotBefore = 0;
-    long                uNotAfter = 0;
+    time_t              tNotBefore = 0;
+    time_t              tNotAfter = 0;
     char                *pHexCert = NULL;
     char                *pHexCACert = NULL;
     char                sKeyID[128];
@@ -1992,8 +1992,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
     JS_PKI_getPeriod( sCertProfile.tNotBefore,
                      sCertProfile.tNotAfter,
                      now_t,
-                     &uNotBefore,
-                     &uNotAfter );
+                     &tNotBefore,
+                     &tNotAfter );
 
     int nSeq = JS_DB_getNextVal( db, "TB_CERT" );
     sprintf( sSerial, "%d", nSeq );
@@ -2089,8 +2089,8 @@ int issueCert( sqlite3 *db, const char *pReq, char **ppRsp )
                              sSerial,
                              sCertProfile.pHash,
                              pRealDN,
-                             uNotBefore,
-                             uNotAfter,
+                             tNotBefore,
+                             tNotAfter,
                              sReqInfo.nKeyAlg,
                              sReqInfo.pPublicKey );
 

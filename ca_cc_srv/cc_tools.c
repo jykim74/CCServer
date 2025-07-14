@@ -102,26 +102,22 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
 {
     int     ret = 0;
     int     nVersion = 1;
-    time_t  tLastUpdate = 0;
+    time_t  tThisUpdate = 0;
     time_t  tNextUpdate = 0;
     JIssueCRLInfo       sIssueCRLInfo;
 
     JExtensionInfoList  *pExtInfoList = NULL;
     JRevokeInfoList     *pRevokedList = NULL;
 
+    time_t now_t = time(NULL);
+
     memset( &sIssueCRLInfo, 0x00, sizeof(sIssueCRLInfo));
 
-    if( pDBCRLProfile->tThisUpdate <= 0 )
-    {
-        tLastUpdate = 0;
-        tNextUpdate = pDBCRLProfile->tNextUpdate * 60 * 60 * 24;
-    }
-    else
-    {
-        time_t now_t = time(NULL);
-        tLastUpdate = pDBCRLProfile->tThisUpdate - now_t;
-        tNextUpdate = pDBCRLProfile->tNextUpdate - now_t;
-    }
+    JS_PKI_getPeriod( pDBCRLProfile->tThisUpdate,
+                     pDBCRLProfile->tNextUpdate,
+                     now_t,
+                     &tThisUpdate,
+                     &tNextUpdate );
 
     while( pDBProfileExtList )
     {
@@ -182,7 +178,7 @@ int makeCRL( JDB_CRLProfile  *pDBCRLProfile,
     JS_PKI_setIssueCRLInfo( &sIssueCRLInfo,
                             nVersion,
                             pDBCRLProfile->pHash,
-                            tLastUpdate,
+                            tThisUpdate,
                             tNextUpdate );
 
     if( g_pP11CTX )
